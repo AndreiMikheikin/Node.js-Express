@@ -1,0 +1,20 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Папка с билдом клиентской части (если не собираетесь пушить её)
+client/build/
+
+# Файлы IDE
+.idea/
+.vscode/
+
+# Лог-файлы
+*.log
+
+# Конфигурации
+.env
+
+# Данные, относящиеся к системе
+.DS_Store
