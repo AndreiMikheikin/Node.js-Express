@@ -5,13 +5,20 @@ on:
     branches: [ master ]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    # Шаг 1: Сборка React
+    # Шаг 1: Установка Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    # Шаг 2: Сборка React-приложения
     - name: Build React app
       run: |
         cd client
@@ -20,41 +27,73 @@ jobs:
       env:
         NODE_OPTIONS: --openssl-legacy-provider
 
-    # Шаг 2: Подготовка артефактов
-    - name: Prepare artifacts
+    # Шаг 3: Подготовка артефактов
+    - name: Prepare deployment artifacts
       run: |
         mkdir -p deployment
         cp -r client/build deployment/
         cp -r server deployment/
         rm -rf deployment/server/node_modules
-    
-    # Шаг 3: Верификация ключа
-    - name: Verify SSH Key
+
+    # Шаг 4: Проверка SSH-ключа
+    - name: Validate SSH Key
       run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
-        chmod 600 key.pem
-        ssh-keygen -lf key.pem
-        rm key.pem
+        if [ -z "$SSH_PRIVATE_KEY" ]; then
+          echo "::error::SSH_PRIVATE_KEY secret is missing"
+          exit 1
+        else
+          echo "$SSH_PRIVATE_KEY" > key.pem
+          chmod 600 key.pem
+          ssh-keygen -lf key.pem
+          rm key.pem
+          echo "SSH key validation passed"
+        fi
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    # Шаг 4: Деплой на VPS
-    - name: Deploy via SSH
-      uses: appleboy/scp-action@v0.1.5
-      with:
-        host: 178.250.247.67
-        username: root
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "deployment/"
-        target: "/root/Node.js-Express"
-        rm: true
-
-    # Шаг 5: Запуск сервера
-    - name: Restart server
+    # Шаг 5: Проверка подключения к серверу
+    - name: Test SSH connection
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: 178.250.247.67
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          echo "Successfully connected to:"
+          uname -a
+          echo "Disk space:"
+          df -h
+        timeout: 30s
+
+    # Шаг 6: Деплой файлов на сервер
+    - name: Deploy via SCP
+      uses: appleboy/scp-action@v0.1.5
+      with:
+        host: 178.250.247.67
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "deployment/"
+        target: "/root/Node.js-Express"
+        rm: true
+        overwrite: true
+        strip_components: 1
+        timeout: 2m
+
+    # Шаг 7: Установка зависимостей и запуск сервера
+    - name: Setup and restart server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: 178.250.247.67
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
         script: |
           cd /root/Node.js-Express/server
           npm install --production
-          pm2 restart app
+          pm2 delete app || true
+          pm2 start app.js --name "app"
+          pm2 save
+          pm2 list
+        timeout: 2m
