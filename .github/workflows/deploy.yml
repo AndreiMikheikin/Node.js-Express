@@ -50,4 +50,3 @@ jobs:
           cd /root/Node.js-Express/server
           npm install --production
           pm2 restart app
-
