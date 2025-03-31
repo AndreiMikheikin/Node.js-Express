@@ -1,0 +1,53 @@
+name: Deploy Node.js + React App
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Шаг 1: Сборка React
+    - name: Build React app
+      run: |
+        cd client
+        npm install
+        npm run build
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
+
+    # Шаг 2: Подготовка артефактов
+    - name: Prepare artifacts
+      run: |
+        mkdir -p deployment
+        cp -r client/build deployment/
+        cp -r server deployment/
+        rm -rf deployment/server/node_modules
+
+    # Шаг 3: Деплой на VPS
+    - name: Deploy via SSH
+      uses: appleboy/scp-action@v0.1.5
+      with:
+        host: 178.250.247.67
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "deployment/"
+        target: "/root/Node.js-Express"
+        rm: true
+
+    # Шаг 4: Запуск сервера
+    - name: Restart server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: 178.250.247.67
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /root/Node.js-Express/server
+          npm install --production
+          pm2 restart app
+
