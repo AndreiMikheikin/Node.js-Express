@@ -27,8 +27,16 @@ jobs:
         cp -r client/build deployment/
         cp -r server deployment/
         rm -rf deployment/server/node_modules
+    
+    # Шаг 3: Верификация ключа
+    - name: Verify SSH Key
+      run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+        chmod 600 key.pem
+        ssh-keygen -lf key.pem
+        rm key.pem
 
-    # Шаг 3: Деплой на VPS
+    # Шаг 4: Деплой на VPS
     - name: Deploy via SSH
       uses: appleboy/scp-action@v0.1.5
       with:
@@ -39,7 +47,7 @@ jobs:
         target: "/root/Node.js-Express"
         rm: true
 
-    # Шаг 4: Запуск сервера
+    # Шаг 5: Запуск сервера
     - name: Restart server
       uses: appleboy/ssh-action@v1.0.0
       with:
