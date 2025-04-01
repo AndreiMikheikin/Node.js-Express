@@ -37,9 +37,15 @@ router.get('/variants', (req, res) => {
   res.json(variants);
 });
 
-router.get('/stat', (req, res) => {
+router.post('/stat', (req, res) => {
   const votes = readVotes();
-  res.json(Object.entries(votes).map(([code, count]) => ({code: parseInt(code), votes: count})));
+  res.json({
+    success: true,
+    statistics: Object.entries(votes).map(([code, count]) => ({
+      code: parseInt(code),
+      votes: count
+    }))
+  });
 });
 
 router.post('/vote', (req, res) => {

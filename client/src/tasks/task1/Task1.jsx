@@ -25,9 +25,20 @@ const Task1 = () => {
   };
 
   const fetchStatistics = async () => {
-    const response = await fetch('/api/task1/stat');
-    const data = await response.json();
-    setStatistics(data);
+    try {
+      const response = await fetch('/api/task1/stat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setStatistics(data.statistics);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   };
 
   const handleVote = async (code) => {
