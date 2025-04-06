@@ -1,49 +1,75 @@
-const express = require('express');
 const fs = require('fs');
 const path = require('path');
-
+const express = require('express');
 const router = express.Router();
 
-const htmlTemplate = fs.readFileSync(path.join(__dirname, '../../../build/task2', 'index.html'), 'utf8');
+const HTML_FILE_PATH = path.join(__dirname, '../../../build/task2/index.html');
 
-function renderForm({ name = '', password = '', errors = {} } = {}) {
-    let errorHtml = '';
-    if (errors.name || errors.password) {
-        errorHtml += '<div class="error">';
-        if (errors.name) errorHtml += `<p>${errors.name}</p>`;
-        if (errors.password) errorHtml += `<p>${errors.password}</p>`;
-        errorHtml += '</div>';
-    }
-
-    return htmlTemplate
-        .replace('{* ERROR_BLOCK *}', errorHtml)
-        .replace('{* NAME_VALUE *}', name)
-        .replace('{* PASSWORD_VALUE *}', password);
+// Вспомогательная функция для безопасного экранирования
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, function (m) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;',
+    })[m];
+  });
 }
 
-// Страница формы
-router.get('/', (req, res) => {
-    res.send(renderForm());
-});
-
-// Обработка формы
 router.get('/submit', (req, res) => {
-    const { name = '', password = '' } = req.query;
-    const errors = {};
+  const { name = '', password = '' } = req.query;
 
-    if (!name.trim()) errors.name = 'Введите логин';
-    if (!password.trim()) errors.password = 'Введите пароль';
+  let errors = {
+    name: '',
+    password: '',
+  };
 
-    if (Object.keys(errors).length > 0) {
-        return res.send(renderForm({ name, password, errors }));
+  let isValid = true;
+
+  if (!name.trim()) {
+    errors.name = '<p style="color:red;">Имя обязательно</p>';
+    isValid = false;
+  }
+
+  if (!password.trim()) {
+    errors.password = '<p style="color:red;">Пароль обязателен</p>';
+    isValid = false;
+  }
+
+  fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
+    if (err) {
+      return res.status(500).send('Ошибка чтения файла');
     }
 
-    res.send(`
-        <h1>С Вашего счета успешно списано 300 копеек!</h1>
-        <p>Ваш логин: <strong>${name}</strong></p>
-        <p>Ваш пароль: <strong>${password}</strong></p>
-        <a href="/tasks/task2">Назад</a>
-    `);
+    if (!isValid) {
+      const filledHtml = html
+        .replace('{* NAME_VALUE *}', escapeHtml(name))
+        .replace('{* PASSWORD_VALUE *}', escapeHtml(password))
+        .replace('<!-- ERROR_NAME -->', errors.name)
+        .replace('<!-- ERROR_PASSWORD -->', errors.password)
+        .replace('<!-- SUCCES_BLOCK -->', '');
+
+      return res.send(filledHtml);
+    }
+
+    const successBlock = `
+      <h2 style="color: green;">Форма успешно отправлена</h2>
+      <p>Логин: ${escapeHtml(name)}</p>
+      <p>Пароль: ${escapeHtml(password)}</p>
+      <hr/>
+    `;
+
+    const successHtml = html
+      .replace('<!-- SUCCES_BLOCK -->', successBlock)
+      .replace('{* NAME_VALUE *}', '')
+      .replace('{* PASSWORD_VALUE *}', '')
+      .replace('<!-- ERROR_NAME -->', '')
+      .replace('<!-- ERROR_PASSWORD -->', '');
+
+    res.send(successHtml);
+  });
 });
 
 module.exports = router;

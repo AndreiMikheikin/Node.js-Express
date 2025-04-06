@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8" />
     <title>Форма</title>
-    <style>.error { color: red; }</style>
 </head>
 <body>
     <h1>Форма</h1>
-    {* ERROR_BLOCK *}
-    <form method="GET" action="/task2/submit">
+    <!-- SUCCES_BLOCK -->
+    <form method="GET" action="/api/task2/submit">
         <div>
             <label>Логин*:</label>
             <input type="text" name="name" value="{* NAME_VALUE *}" />
+            <!-- ERROR_NAME -->
         </div>
         <div>
             <label>Пароль*:</label>
             <input type="password" name="password" value="{* PASSWORD_VALUE *}" />
+            <!-- ERROR_PASSWORD -->
         </div>
         <button type="submit">Отправить</button>
     </form>
