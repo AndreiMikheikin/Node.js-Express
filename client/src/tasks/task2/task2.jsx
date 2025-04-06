@@ -1,3 +1,4 @@
+/* file renamed Task2.jsx */
 import React, { useEffect } from 'react';
 
 function Task2() {
