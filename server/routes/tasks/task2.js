@@ -4,7 +4,7 @@ const path = require('path');
 
 const router = express.Router();
 
-const htmlPath = path.join(__dirname, '../../../client/public/task2/index.html');
+const htmlPath = fs.readFileSync(path.join(__dirname, '../build/task2', 'index.html'));
 const htmlTemplate = fs.readFileSync(htmlPath, 'utf8');
 
 function renderForm({ name = '', password = '', errors = {} } = {}) {
