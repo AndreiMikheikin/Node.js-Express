@@ -52,6 +52,9 @@ router.get('/submit', (req, res) => {
         if (err) return res.status(500).send('Ошибка чтения файла');
 
         // Первый заход — просто пустая форма
+        const nameAttr = name ? `value="${escapeHtml(name)}"` : '';
+        const passwordAttr = password ? `value="${escapeHtml(password)}"` : '';
+
         if (!hasQuery) {
             const cleanHtml = html
                 .replace('{* NAME_VALUE *}', '')
@@ -63,11 +66,12 @@ router.get('/submit', (req, res) => {
             return res.send(cleanHtml);
         }
 
+
         // Ошибки — вернуть с сохранёнными значениями и сообщениями
         if (!isValid) {
             const filledHtml = html
-                .replace('{* NAME_VALUE *}', escapeHtml(name))
-                .replace('{* PASSWORD_VALUE *}', escapeHtml(password))
+                .replace('{* NAME_VALUE *}', nameAttr)
+                .replace('{* PASSWORD_VALUE *}', passwordAttr)
                 .replace('<!-- ERROR_NAME -->', errors.name)
                 .replace('<!-- ERROR_PASSWORD -->', errors.password)
                 .replace('<!-- SUCCES_BLOCK -->', '');

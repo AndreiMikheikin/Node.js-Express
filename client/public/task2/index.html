@@ -10,12 +10,12 @@
     <form method="GET" action="/api/task2/submit">
         <div>
             <label>Логин*:</label>
-            <input type="text" name="name" value="{* NAME_VALUE *}" />
+            <input type="text" name="name" {* NAME_VALUE *} />
             <!-- ERROR_NAME -->
         </div>
         <div>
             <label>Пароль*:</label>
-            <input type="password" name="password" value="{* PASSWORD_VALUE *}" />
+            <input type="password" name="password" {* PASSWORD_VALUE *} />
             <!-- ERROR_PASSWORD -->
         </div>
         <button type="submit">Отправить</button>
