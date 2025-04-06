@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import NextTask from './tasks/nextTask/nextTask';
 import Task1 from './tasks/task1/Task1';
-import Task2 from './tasks/task2/Task2';
+import Task2 from './tasks/task2/Task2'; 
 
 function App() {
   return (
