@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import NextTask from './tasks/nextTask/nextTask';
 import Task1 from './tasks/task1/Task1';
-import Task2 from './tasks/task2/Task2';
 
 function App() {
   return (
@@ -19,7 +18,6 @@ function App() {
 
         <Routes>
           <Route path="/task1" element={<Task1 />} />
-          <Route path="/task2" element={<Task2 />} />
           <Route path="/nextTask" element={<NextTask />} />
         </Routes>
       </div>

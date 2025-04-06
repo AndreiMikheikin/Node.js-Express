@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Форма</title>
+    <style>.error { color: red; }</style>
+</head>
+<body>
+    <h1>Форма</h1>
+    {* ERROR_BLOCK *}
+    <form method="GET" action="/task2/submit">
+        <div>
+            <label>Логин*:</label>
+            <input type="text" name="name" value="{* NAME_VALUE *}" />
+        </div>
+        <div>
+            <label>Пароль*:</label>
+            <input type="password" name="password" value="{* PASSWORD_VALUE *}" />
+        </div>
+        <button type="submit">Отправить</button>
+    </form>
+</body>
+</html>

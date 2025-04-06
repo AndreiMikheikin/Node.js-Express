@@ -2,57 +2,49 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-const app = express();
-app.use(express.urlencoded({ extended: true }));
+const router = express.Router();
 
-// Загружаем HTML как строку
-const htmlTemplate = fs.readFileSync(
-    path.join(__dirname, 'public', 'index.html'),
-    'utf8'
-);
+const htmlPath = path.join(__dirname, '../../../client/public/task2/index.html');
+const htmlTemplate = fs.readFileSync(htmlPath, 'utf8');
 
-// Валидация (простая проверка полей)
-function validateForm(data) {
-    const errors = {};
-
-    if (!data.name) errors.name = 'Введите логин';
-    if (!data.password) errors.password = 'Введите пароль';
-
-    return errors;
-}
-
-// Главная страница (GET)
-app.get('/', (req, res) => {
-    const html = htmlTemplate
-        .replace('{* SUCCESS_MESSAGE *}', '')
-        .replace('{* LOGIN_ERROR *}', '')
-        .replace('{* PASSWORD_ERROR *}', '');
-
-    res.send(html);
-});
-
-// Обработка формы (POST)
-app.post('/submit', (req, res) => {
-    const errors = validateForm(req.body);
-
-    if (Object.keys(errors).length > 0) {
-        // Если есть ошибки — вставляем их в HTML
-        const htmlWithErrors = htmlTemplate
-            .replace('{* SUCCESS_MESSAGE *}', '')
-            .replace('{* LOGIN_ERROR *}',
-                errors.name ? `<div class="error">${errors.name}</div>` : '')
-            .replace('{* PASSWORD_ERROR *}',
-                errors.password ? `<div class="error">${errors.password}</div>` : '');
-
-        return res.send(htmlWithErrors);
+function renderForm({ name = '', password = '', errors = {} } = {}) {
+    let errorHtml = '';
+    if (errors.name || errors.password) {
+        errorHtml += '<div class="error">';
+        if (errors.name) errorHtml += `<p>${errors.name}</p>`;
+        if (errors.password) errorHtml += `<p>${errors.password}</p>`;
+        errorHtml += '</div>';
     }
 
-    // Если форма успешна — показываем сообщение
-    const successHtml = htmlTemplate
-        .replace('{* SUCCESS_MESSAGE *}',
-            '<div class="success">С вашего счета успешано списано 300 копеек!</div>')
-        .replace('{* LOGIN_ERROR *}', '')
-        .replace('{* PASSWORD_ERROR *}', '');
+    return htmlTemplate
+        .replace('{* ERROR_BLOCK *}', errorHtml)
+        .replace('{* NAME_VALUE *}', name)
+        .replace('{* PASSWORD_VALUE *}', password);
+}
 
-    res.send(successHtml);
+// Страница формы
+router.get('/', (req, res) => {
+    res.send(renderForm());
 });
+
+// Обработка формы
+router.get('/submit', (req, res) => {
+    const { name = '', password = '' } = req.query;
+    const errors = {};
+
+    if (!name.trim()) errors.name = 'Введите логин';
+    if (!password.trim()) errors.password = 'Введите пароль';
+
+    if (Object.keys(errors).length > 0) {
+        return res.send(renderForm({ name, password, errors }));
+    }
+
+    res.send(`
+        <h1>С Вашего счета успешно списано 300 копеек!</h1>
+        <p>Ваш логин: <strong>${name}</strong></p>
+        <p>Ваш пароль: <strong>${password}</strong></p>
+        <a href="/tasks/task2">Назад</a>
+    `);
+});
+
+module.exports = router;
