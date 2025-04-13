@@ -2,37 +2,49 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const { json2xml } = require('xml-js');
 
 const DATA_FILE = path.join(__dirname, '../data/task1Data.json');
 
-// Функция для чтения статистики голосов
-const getStatistics = () => {
+// Чтение статистики из файла
+const getVoteStatistics = () => {
     try {
-        const votes = JSON.parse(fs.readFileSync(DATA_FILE));
+        const data = fs.readFileSync(DATA_FILE);
+        const votes = JSON.parse(data);
         return Object.entries(votes).map(([code, count]) => ({
             code: parseInt(code),
             votes: count
         }));
     } catch (err) {
-        console.error('Error reading votes file:', err);
+        console.error('Ошибка чтения файла голосов:', err);
         return [];
     }
 };
 
-// Функция для генерации HTML таблицы
+// Генерация XML
+const generateXML = (stats) => {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<statistics>\n';
+    stats.forEach(stat => {
+        xml += `  <vote code="${stat.code}">${stat.votes}</vote>\n`;
+    });
+    xml += '</statistics>';
+    return xml;
+};
+
+// Генерация HTML
 const generateHTML = (stats) => {
-    let html = `
-<!DOCTYPE html>
-<html>
+    let html = `<!DOCTYPE html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
     <title>Статистика голосования</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { color: #333; }
-        table { border-collapse: collapse; width: 50%; }
+        table { border-collapse: collapse; width: 300px; margin: 20px 0; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
+        .footer { font-size: 0.8em; color: #666; }
     </style>
 </head>
 <body>
@@ -40,9 +52,8 @@ const generateHTML = (stats) => {
     <table>
         <tr>
             <th>Вариант</th>
-            <th>Голоса</th>
-        </tr>
-`;
+            <th>Голосов</th>
+        </tr>`;
 
     stats.forEach(stat => {
         html += `
@@ -54,56 +65,43 @@ const generateHTML = (stats) => {
 
     html += `
     </table>
-    <p>Дата экспорта: ${new Date().toLocaleString()}</p>
+    <div class="footer">Сгенерировано ${new Date().toLocaleString()}</div>
 </body>
 </html>`;
 
     return html;
 };
 
-// Роут для экспорта статистики
+// Обработка экспорта
 router.post('/export', (req, res) => {
     const { format } = req.body;
-    const stats = getStatistics();
-
-    if (!format) {
-        return res.status(400).json({ error: 'Формат не указан' });
+    
+    if (!format || !['json', 'xml', 'html'].includes(format)) {
+        return res.status(400).json({ error: 'Неверный формат экспорта' });
     }
 
+    const stats = getVoteStatistics();
+    
     try {
-        switch (format.toLowerCase()) {
+        switch (format) {
             case 'json':
                 res.setHeader('Content-Type', 'application/json');
                 res.setHeader('Content-Disposition', 'attachment; filename=statistics.json');
                 return res.json(stats);
-
+            
             case 'xml':
-                const xmlData = {
-                    _declaration: { _attributes: { version: '1.0', encoding: 'UTF-8' } },
-                    statistics: {
-                        vote: stats.map(stat => ({
-                            _attributes: { code: stat.code },
-                            _text: stat.votes
-                        }))
-                    }
-                };
-                const xml = json2xml(JSON.stringify(xmlData), { compact: true, spaces: 4 });
                 res.setHeader('Content-Type', 'application/xml');
                 res.setHeader('Content-Disposition', 'attachment; filename=statistics.xml');
-                return res.send(xml);
-
+                return res.send(generateXML(stats));
+            
             case 'html':
-                const html = generateHTML(stats);
                 res.setHeader('Content-Type', 'text/html');
                 res.setHeader('Content-Disposition', 'attachment; filename=statistics.html');
-                return res.send(html);
-
-            default:
-                return res.status(400).json({ error: 'Неподдерживаемый формат' });
+                return res.send(generateHTML(stats));
         }
     } catch (error) {
-        console.error('Export error:', error);
-        return res.status(500).json({ error: 'Ошибка при экспорте данных' });
+        console.error('Ошибка экспорта:', error);
+        return res.status(500).json({ error: 'Ошибка сервера при экспорте' });
     }
 });
 
