@@ -12,12 +12,21 @@ const Task3 = () => {
         if (!response.ok) {
           throw new Error('Ошибка загрузки файла');
         }
-        const filename = response.headers.get('Content-Disposition').split('filename=')[1];
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = 'downloaded_file';  // имя по умолчанию
+
+        if (contentDisposition && contentDisposition.includes('filename=')) {
+          filename = contentDisposition.split('filename=')[1].trim().replace(/["']/g, ''); // убираем кавычки
+        }
+
         response.blob().then((blob) => {
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
-          link.download = filename; // Даем файл имя из заголовка
+          link.download = filename;
+          document.body.appendChild(link);
           link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
         });
       })
       .catch((error) => {
