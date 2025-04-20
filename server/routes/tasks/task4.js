@@ -1,5 +1,5 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
 
@@ -18,10 +18,9 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-router.get('/submit', (req, res) => {
-    fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
-        if (err) return res.status(500).send('Ошибка чтения файла');
-
+router.get('/submit', async (req, res) => {
+    try {
+        const html = await fs.readFile(HTML_FILE_PATH, 'utf8');
         res.send(
             html
                 .replace('{* NAME_VALUE *}', '')
@@ -29,10 +28,12 @@ router.get('/submit', (req, res) => {
                 .replace('<!-- ERROR_NAME -->', '')
                 .replace('<!-- ERROR_PASSWORD -->', '')
         );
-    });
+    } catch (err) {
+        res.status(500).send('Ошибка чтения файла');
+    }
 });
 
-router.post('/submit', (req, res) => {
+router.post('/submit', async (req, res) => {
     const { name = '', password = '' } = req.body;
     let errors = { name: '', password: '' };
     let isValid = true;
@@ -54,60 +55,64 @@ router.post('/submit', (req, res) => {
     }
 
     if (!isValid) {
-        fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
-            if (err) return res.status(500).send('Ошибка чтения файла');
-
+        try {
+            const html = await fs.readFile(HTML_FILE_PATH, 'utf8');
             const filledHtml = html
                 .replace('{* NAME_VALUE *}', `value="${escapeHtml(name)}"`)
                 .replace('{* PASSWORD_VALUE *}', `value="${escapeHtml(password)}"`)
                 .replace('<!-- ERROR_NAME -->', errors.name)
                 .replace('<!-- ERROR_PASSWORD -->', errors.password);
-
             res.send(filledHtml);
-        });
+        } catch (err) {
+            res.status(500).send('Ошибка чтения файла');
+        }
     } else {
         const hash = crypto.createHash('sha256').update(password).digest('hex');
-
         let tempData = {};
-        if (fs.existsSync(TEMP_DATA_PATH)) {
-            const content = fs.readFileSync(TEMP_DATA_PATH, 'utf8');
+
+        try {
+            const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
             tempData = content ? JSON.parse(content) : {};
+        } catch (err) {
+            // если файла нет — игнорируем
         }
 
         tempData[hash] = { name, password };
-        fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
-
+        await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
         res.redirect(`/success?hash=${hash}`);
     }
 });
 
-router.get('/success', (req, res) => {
+router.get('/success', async (req, res) => {
     const hash = req.query.hash;
     if (!hash) return res.redirect('/submit');
 
     let tempData = {};
-    if (fs.existsSync(TEMP_DATA_PATH)) {
-        const content = fs.readFileSync(TEMP_DATA_PATH, 'utf8');
+    try {
+        const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
         tempData = content ? JSON.parse(content) : {};
+    } catch (err) {
+        // если файла нет
+        return res.redirect('/submit');
     }
 
-    console.log('Temp Data:', tempData);
-    
     const data = tempData[hash];
     if (!data) return res.redirect('/submit');
 
-    delete tempData[hash];
-    fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
-
-    fs.readFile(SUCCESS_FILE_PATH, 'utf8', (err, html) => {
-        if (err) return res.status(500).send('Ошибка чтения файла');
-
+    try {
+        const html = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
         const resultHtml = html
             .replace('{* NAME *}', escapeHtml(data.name))
             .replace('{* PASSWORD *}', escapeHtml(data.password));
-
         res.send(resultHtml);
-    });
+
+        // после успешной отправки удаляем данные
+        delete tempData[hash];
+        await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
+
+    } catch (err) {
+        res.status(500).send('Ошибка обработки файла');
+    }
 });
 
 module.exports = router;
