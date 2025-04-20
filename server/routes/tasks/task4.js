@@ -21,6 +21,7 @@ function escapeHtml(unsafe) {
 // Рендеринг начальной страницы с формой
 router.get('/submit', (req, res) => {
     fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
+        console.error('Ошибка чтения файла:', HTML_FILE_PATH);
         if (err) return res.status(500).send('Ошибка чтения файла');
 
         res.send(
@@ -59,6 +60,7 @@ router.post('/submit', (req, res) => {
     if (!isValid) {
         // Если данные не валидны, вернем форму с ошибками
         fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
+            console.error('Ошибка чтения файла:', HTML_FILE_PATH);
             if (err) return res.status(500).send('Ошибка чтения файла');
 
             const filledHtml = html
@@ -105,6 +107,7 @@ router.get('/success', (req, res) => {
 
     // Загружаем страницу успеха
     fs.readFile(SUCCESS_FILE_PATH, 'utf8', (err, html) => {
+        console.error('Ошибка чтения файла:', SUCCESS_FILE_PATH);
         if (err) return res.status(500).send('Ошибка чтения файла');
 
         // Генерация итогового HTML с данными
