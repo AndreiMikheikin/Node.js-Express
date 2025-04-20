@@ -17,7 +17,7 @@ function escapeHtml(text) {
     });
 }
 
-router.get('/submit', (req, res) => {
+router.post('/submit', (req, res) => {
     const { name = '', password = '' } = req.body;
 
     const hasBody = 'name' in req.body || 'password' in req.body;
