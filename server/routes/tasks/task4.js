@@ -85,7 +85,7 @@ router.post('/submit', async (req, res) => {
         tempData[hash] = { name, password };
         await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
 
-        res.json({ success: true, redirect: `/task4/success?hash=${hash}` });
+        res.send({ success: true, redirect: `/task4/success?hash=${hash}` });
     }
 });
 
