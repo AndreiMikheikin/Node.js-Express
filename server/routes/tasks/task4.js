@@ -90,28 +90,32 @@ router.get('/success', async (req, res) => {
     let tempData = {};
     try {
         const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
-        tempData = content ? JSON.parse(content) : {};
+        tempData = JSON.parse(content);
     } catch (err) {
-        // если файла нет
+        console.error("Ошибка чтения temp.json:", err);
         return res.redirect('/submit');
     }
 
     const data = tempData[hash];
-    if (!data) return res.redirect('/submit');
+    if (!data) {
+        console.error("Данные по хэшу не найдены:", hash);
+        return res.redirect('/submit');
+    }
 
     try {
         const html = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
         const resultHtml = html
             .replace('<!-- NAME -->', escapeHtml(data.name))
             .replace('<!-- PASSWORD -->', '******');
+        
+        console.log("Успешно. Данные:", data.name); // Лог для отладки
         res.send(resultHtml);
 
-        // после успешной отправки удаляем данные
         delete tempData[hash];
         await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
-
     } catch (err) {
-        res.status(500).send('Ошибка обработки файла');
+        console.error("Ошибка обработки success.html:", err);
+        res.status(500).send('Ошибка сервера');
     }
 });
 
