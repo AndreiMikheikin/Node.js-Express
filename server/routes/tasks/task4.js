@@ -5,12 +5,12 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
-const HTML_FILE_PATH = path.join(__dirname, '../../../build/task4/index.html');
-const SUCCESS_FILE_PATH = path.join(__dirname, '../../../build/task4/success.html');
+// Путь до файлов
+const HTML_FILE_PATH = path.join(__dirname, '../../build/task4/index.html');
+const SUCCESS_FILE_PATH = path.join(__dirname, '../../build/task4/success.html');
 const TEMP_DATA_PATH = path.join(__dirname, '../data/temp.json');
 
-
-// Функция экранирования HTML
+// Экранирование HTML
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -20,7 +20,7 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-// GET /task4/submit - форма
+// GET /task4/submit — показать пустую форму
 router.get('/submit', async (req, res) => {
     try {
         const html = await fs.readFile(HTML_FILE_PATH, 'utf8');
@@ -36,7 +36,7 @@ router.get('/submit', async (req, res) => {
     }
 });
 
-// POST /task4/submit - обработка формы
+// POST /task4/submit — обработка формы
 router.post('/submit', async (req, res) => {
     const { name = '', password = '' } = req.body;
     let errors = { name: '', password: '' };
@@ -72,38 +72,48 @@ router.post('/submit', async (req, res) => {
             res.status(500).send('Ошибка чтения файла формы');
         }
     } else {
+        const hash = crypto.createHash('sha256').update(password).digest('hex');
+        let tempData = {};
+
         try {
-            const successHtml = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
-            const filledSuccess = successHtml
-                .replace('<!-- NAME -->', escapeHtml(name))
-                .replace('<!-- PASSWORD -->', escapeHtml(password));
-    
-            res.send(filledSuccess);
+            const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
+            tempData = content ? JSON.parse(content) : {};
         } catch (err) {
-            res.status(500).send('Ошибка чтения файла success.html');
+            console.log('Создан новый файл temp.json');
         }
+
+        tempData[hash] = { name, password };
+        await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
+
+        // Перенаправляем на success с hash
+        res.redirect(`/task4/success?hash=${hash}`);
     }
 });
 
-// GET /task4/success - страница успеха
-router.get('/success-data', async (req, res) => {
+// GET /task4/success — рендер страницы с данными
+router.get('/success', async (req, res) => {
     const hash = req.query.hash;
-    if (!hash) return res.status(400).json({ error: 'Hash is required' });
+    if (!hash) return res.status(400).send('Hash is missing!');
 
     try {
         const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
         const tempData = content ? JSON.parse(content) : {};
         const userData = tempData[hash];
 
-        if (!userData) return res.status(404).json({ error: 'Data not found' });
+        if (!userData) return res.status(404).send('Data not found!');
+
+        const html = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
+        const filledHtml = html
+            .replace('<!-- NAME -->', escapeHtml(userData.name))
+            .replace('<!-- PASSWORD -->', escapeHtml(userData.password));
 
         // Удаляем использованные данные
         delete tempData[hash];
         await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
 
-        res.json({ name: userData.name });
+        res.send(filledHtml);
     } catch (err) {
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).send('Ошибка сервера');
     }
 });
 
