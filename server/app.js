@@ -11,15 +11,14 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../build')));
 
-// API Routes
+// API маршруты
 app.use('/api', tasksRouter);
 
-// Запрос для формы валидации
+// Статические маршруты для заданий
 app.get('/task2', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/task2/index.html'));
 });
 
-// Запрос для формы валидации с POST
 app.get('/task4', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/task4/index.html'));
 });
@@ -28,11 +27,11 @@ app.get('/success', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/task4/success.html'));
 });
 
-// Все остальные запросы отправляем React приложению
+// Фоллбэк для React (если путь не найден среди вышеуказанных)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../build', 'index.html'));
+  res.sendFile(path.join(__dirname, '../build/index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://178.250.247.67:${PORT}`);
+  console.log(`Server is running at: http://178.250.247.67:${PORT}`);
 });

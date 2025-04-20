@@ -4,8 +4,9 @@ const path = require('path');
 const crypto = require('crypto');
 
 const router = express.Router();
-const HTML_FILE_PATH = path.join(__dirname, '../public/task4/index.html');
-const SUCCESS_FILE_PATH = path.join(__dirname, '../public/task4/success.html');
+
+const HTML_FILE_PATH = path.join(__dirname, '../../../build/task4/index.html');
+const SUCCESS_FILE_PATH = path.join(__dirname, '../../../build/task4/success.html');
 const TEMP_DATA_PATH = path.join(__dirname, '../data/temp.json');
 
 function escapeHtml(unsafe) {
@@ -36,7 +37,6 @@ router.post('/submit', (req, res) => {
     let errors = { name: '', password: '' };
     let isValid = true;
 
-    // Валидация имени
     if (!name.trim()) {
         errors.name = '<p style="color:red;">Имя обязательно</p>';
         isValid = false;
@@ -45,7 +45,6 @@ router.post('/submit', (req, res) => {
         isValid = false;
     }
 
-    // Валидация пароля
     if (!password.trim()) {
         errors.password = '<p style="color:red;">Пароль обязателен</p>';
         isValid = false;
@@ -54,42 +53,37 @@ router.post('/submit', (req, res) => {
         isValid = false;
     }
 
-    // Если есть ошибки, возвращаем форму с ошибками
     if (!isValid) {
         fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
             if (err) return res.status(500).send('Ошибка чтения файла');
 
-            // Подставляем значения формы и ошибки
             const filledHtml = html
                 .replace('{* NAME_VALUE *}', `value="${escapeHtml(name)}"`)
                 .replace('{* PASSWORD_VALUE *}', `value="${escapeHtml(password)}"`)
                 .replace('<!-- ERROR_NAME -->', errors.name)
                 .replace('<!-- ERROR_PASSWORD -->', errors.password);
 
-            // Отправляем HTML с ошибками
             res.send(filledHtml);
         });
     } else {
-        // Генерируем токен и сохраняем данные
-        const token = crypto.randomBytes(16).toString('hex');
-        let tempData = {};
+        const hash = crypto.createHash('sha256').update(password).digest('hex');
 
+        let tempData = {};
         if (fs.existsSync(TEMP_DATA_PATH)) {
             const content = fs.readFileSync(TEMP_DATA_PATH, 'utf8');
             tempData = content ? JSON.parse(content) : {};
         }
 
-        tempData[token] = { name, password };
+        tempData[hash] = { name, password };
         fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
 
-        // Перенаправление на страницу успеха с токеном
-        res.redirect(`/success?token=${token}`);
+        res.redirect(`/success?hash=${hash}`);
     }
 });
 
 router.get('/success', (req, res) => {
-    const token = req.query.token;
-    if (!token) return res.redirect('/submit');
+    const hash = req.query.hash;
+    if (!hash) return res.redirect('/submit');
 
     let tempData = {};
     if (fs.existsSync(TEMP_DATA_PATH)) {
@@ -97,22 +91,19 @@ router.get('/success', (req, res) => {
         tempData = content ? JSON.parse(content) : {};
     }
 
-    const data = tempData[token];
+    const data = tempData[hash];
     if (!data) return res.redirect('/submit');
 
-    // Удаляем токен после отображения данных
-    delete tempData[token];
+    delete tempData[hash];
     fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
 
     fs.readFile(SUCCESS_FILE_PATH, 'utf8', (err, html) => {
         if (err) return res.status(500).send('Ошибка чтения файла');
 
-        // Заменяем плейсхолдеры на реальные данные
         const resultHtml = html
             .replace('{* NAME *}', escapeHtml(data.name))
             .replace('{* PASSWORD *}', escapeHtml(data.password));
 
-        // Отправляем страницу успеха
         res.send(resultHtml);
     });
 });
