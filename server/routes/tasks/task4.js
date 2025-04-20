@@ -103,7 +103,7 @@ router.get('/success', async (req, res) => {
         const html = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
         const resultHtml = html
             .replace('{* NAME *}', escapeHtml(data.name))
-            .replace('{* PASSWORD *}', escapeHtml(data.password));
+            .replace('{* PASSWORD *}', '******');
         res.send(resultHtml);
 
         // после успешной отправки удаляем данные
