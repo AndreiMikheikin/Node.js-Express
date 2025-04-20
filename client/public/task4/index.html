@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Форма POST</title>
+</head>
+<body>
+    <h1>Форма</h1>
+    <!-- SUCCES_BLOCK -->
+    <form method="POST" action="/api/task4/submit">
+        <div>
+            <label>Логин*:</label>
+            <input type="text" name="name" {* NAME_VALUE *} />
+            <!-- ERROR_NAME -->
+        </div>
+        <div>
+            <label>Пароль*:</label>
+            <input type="password" name="password" {* PASSWORD_VALUE *} />
+            <!-- ERROR_PASSWORD -->
+        </div>
+        <button type="submit">Отправить</button>
+    </form>
+
+    <a href="/">На главную</a>
+</body>
+</html>

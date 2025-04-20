@@ -17,6 +17,11 @@ app.get('/task2', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/task2/index.html'));
 });
 
+// Запрос для формы валидации с POST
+app.get('/task4', (req, res) => {
+  res.sendFile(path.join(__dirname, '../build/task4/index.html'));
+});
+
 // Все остальные запросы отправляем React приложению
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../build', 'index.html'));
