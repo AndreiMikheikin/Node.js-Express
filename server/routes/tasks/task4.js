@@ -71,21 +71,16 @@ router.post('/submit', async (req, res) => {
             res.status(500).send('Ошибка чтения файла формы');
         }
     } else {
-        // Если валидация пройдена
-        const hash = crypto.createHash('sha256').update(password).digest('hex');
-        let tempData = {};
-
         try {
-            const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
-            tempData = content ? JSON.parse(content) : {};
+            const successHtml = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
+            const filledSuccess = successHtml
+                .replace('<!-- NAME -->', escapeHtml(name))
+                .replace('<!-- PASSWORD -->', escapeHtml(password));
+    
+            res.send(filledSuccess);
         } catch (err) {
-            console.log('Создан новый файл temp.json');
+            res.status(500).send('Ошибка чтения файла success.html');
         }
-
-        tempData[hash] = { name, password };
-        await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
-
-        res.redirect(`/task4/success?hash=${hash}`);
     }
 });
 

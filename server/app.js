@@ -23,10 +23,6 @@ app.get('/task4', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/task4/index.html'));
 });
 
-app.get('/task4/success', (req, res) => {
-  res.sendFile(path.join(__dirname, '../build/task4/success.html'));
-});
-
 // Фоллбэк для React (если путь не найден среди вышеуказанных)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/index.html'));
