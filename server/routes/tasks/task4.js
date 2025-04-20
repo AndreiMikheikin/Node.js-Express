@@ -55,7 +55,7 @@ router.post('/submit', (req, res) => {
         const nameAttr = name ? `value="${escapeHtml(name)}"` : '';
         const passwordAttr = password ? `value="${escapeHtml(password)}"` : '';
 
-        if (!hasQuery) {
+        if (!hasBody) {
             const cleanHtml = html
                 .replace('{* NAME_VALUE *}', '')
                 .replace('{* PASSWORD_VALUE *}', '')

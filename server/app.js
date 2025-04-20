@@ -1,12 +1,14 @@
 const express = require('express');
 const path = require('path');
 const tasksRouter = require('./routes');
+const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = 3333;
 
 // Middleware
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../build')));
 
 // API Routes
