@@ -90,31 +90,4 @@ router.post('/submit', async (req, res) => {
     }
 });
 
-// GET /task4/success — рендер страницы с данными
-router.get('/success', async (req, res) => {
-    const hash = req.query.hash;
-    if (!hash) return res.status(400).send('Hash is missing!');
-
-    try {
-        const content = await fs.readFile(TEMP_DATA_PATH, 'utf8');
-        const tempData = content ? JSON.parse(content) : {};
-        const userData = tempData[hash];
-
-        if (!userData) return res.status(404).send('Data not found!');
-
-        const html = await fs.readFile(SUCCESS_FILE_PATH, 'utf8');
-        const filledHtml = html
-            .replace('<!-- NAME -->', escapeHtml(userData.name))
-            .replace('<!-- PASSWORD -->', escapeHtml(userData.password));
-
-        // Удаляем использованные данные
-        delete tempData[hash];
-        await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
-
-        res.send(filledHtml);
-    } catch (err) {
-        res.status(500).send('Ошибка сервера');
-    }
-});
-
 module.exports = router;
