@@ -8,7 +8,6 @@ const HTML_FILE_PATH = path.join(__dirname, '../public/task4/index.html');
 const SUCCESS_FILE_PATH = path.join(__dirname, '../public/task4/success.html');
 const TEMP_DATA_PATH = path.join(__dirname, '../data/temp.json');
 
-// Функция для экранирования HTML
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -18,10 +17,8 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-// Рендеринг начальной страницы с формой
 router.get('/submit', (req, res) => {
     fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
-        console.error('Ошибка чтения файла:', HTML_FILE_PATH);
         if (err) return res.status(500).send('Ошибка чтения файла');
 
         res.send(
@@ -34,13 +31,12 @@ router.get('/submit', (req, res) => {
     });
 });
 
-// Обработка POST запроса при отправке формы
 router.post('/submit', (req, res) => {
     const { name = '', password = '' } = req.body;
     let errors = { name: '', password: '' };
     let isValid = true;
 
-    // Валидация данных
+    // Валидация имени
     if (!name.trim()) {
         errors.name = '<p style="color:red;">Имя обязательно</p>';
         isValid = false;
@@ -49,6 +45,7 @@ router.post('/submit', (req, res) => {
         isValid = false;
     }
 
+    // Валидация пароля
     if (!password.trim()) {
         errors.password = '<p style="color:red;">Пароль обязателен</p>';
         isValid = false;
@@ -57,32 +54,31 @@ router.post('/submit', (req, res) => {
         isValid = false;
     }
 
+    // Если есть ошибки, возвращаем форму с ошибками
     if (!isValid) {
-        // Если данные не валидны, вернем форму с ошибками
         fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
-            console.error('Ошибка чтения файла:', HTML_FILE_PATH);
             if (err) return res.status(500).send('Ошибка чтения файла');
 
+            // Подставляем значения формы и ошибки
             const filledHtml = html
                 .replace('{* NAME_VALUE *}', `value="${escapeHtml(name)}"`)
                 .replace('{* PASSWORD_VALUE *}', `value="${escapeHtml(password)}"`)
                 .replace('<!-- ERROR_NAME -->', errors.name)
                 .replace('<!-- ERROR_PASSWORD -->', errors.password);
 
+            // Отправляем HTML с ошибками
             res.send(filledHtml);
         });
     } else {
-        // Генерация уникального токена
+        // Генерируем токен и сохраняем данные
         const token = crypto.randomBytes(16).toString('hex');
         let tempData = {};
 
-        // Чтение существующих данных, если они есть
         if (fs.existsSync(TEMP_DATA_PATH)) {
             const content = fs.readFileSync(TEMP_DATA_PATH, 'utf8');
             tempData = content ? JSON.parse(content) : {};
         }
 
-        // Сохранение данных в файл
         tempData[token] = { name, password };
         fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
 
@@ -91,7 +87,6 @@ router.post('/submit', (req, res) => {
     }
 });
 
-// Обработка страницы успеха с отображением данных
 router.get('/success', (req, res) => {
     const token = req.query.token;
     if (!token) return res.redirect('/submit');
@@ -105,21 +100,19 @@ router.get('/success', (req, res) => {
     const data = tempData[token];
     if (!data) return res.redirect('/submit');
 
-    // Загружаем страницу успеха
+    // Удаляем токен после отображения данных
+    delete tempData[token];
+    fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
+
     fs.readFile(SUCCESS_FILE_PATH, 'utf8', (err, html) => {
-        console.error('Ошибка чтения файла:', SUCCESS_FILE_PATH);
         if (err) return res.status(500).send('Ошибка чтения файла');
 
-        // Генерация итогового HTML с данными
+        // Заменяем плейсхолдеры на реальные данные
         const resultHtml = html
             .replace('{* NAME *}', escapeHtml(data.name))
             .replace('{* PASSWORD *}', escapeHtml(data.password));
 
-        // Удаляем данные после того, как они были использованы
-        delete tempData[token];
-        fs.writeFileSync(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
-
-        // Отправляем сгенерированный HTML
+        // Отправляем страницу успеха
         res.send(resultHtml);
     });
 });
