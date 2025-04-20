@@ -3,7 +3,7 @@ const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-const HTML_FILE_PATH = path.join(__dirname, '../../../build/task2/index.html');
+const HTML_FILE_PATH = path.join(__dirname, '../../../build/task4/index.html');
 
 function escapeHtml(text) {
     return text.replace(/[&<>"']/g, function (m) {
