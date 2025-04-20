@@ -29,7 +29,6 @@ router.post('/submit', (req, res) => {
 
     let isValid = true;
 
-    // Только если параметры реально пришли — валидируем
     if (hasBody) {
         if (!name.trim()) {
             errors.name = '<p style="color:red;">Имя обязательно</p>';
@@ -48,54 +47,26 @@ router.post('/submit', (req, res) => {
         }
     }
 
-    fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
-        if (err) return res.status(500).send('Ошибка чтения файла');
+    if (!hasBody || !isValid) {
+        fs.readFile(HTML_FILE_PATH, 'utf8', (err, html) => {
+            if (err) return res.status(500).send('Ошибка чтения файла');
 
-        // Первый заход — просто пустая форма
-        const nameAttr = name ? `value="${escapeHtml(name)}"` : '';
-        const passwordAttr = password ? `value="${escapeHtml(password)}"` : '';
+            const nameAttr = name ? `value="${escapeHtml(name)}"` : '';
+            const passwordAttr = password ? `value="${escapeHtml(password)}"` : '';
 
-        if (!hasBody) {
-            const cleanHtml = html
-                .replace('{* NAME_VALUE *}', '')
-                .replace('{* PASSWORD_VALUE *}', '')
-                .replace('<!-- ERROR_NAME -->', '')
-                .replace('<!-- ERROR_PASSWORD -->', '')
-                .replace('<!-- SUCCES_BLOCK -->', '');
-
-            return res.send(cleanHtml);
-        }
-
-
-        // Ошибки — вернуть с сохранёнными значениями и сообщениями
-        if (!isValid) {
-            const filledHtml = html
+            const pageHtml = html
                 .replace('{* NAME_VALUE *}', nameAttr)
                 .replace('{* PASSWORD_VALUE *}', passwordAttr)
                 .replace('<!-- ERROR_NAME -->', errors.name)
                 .replace('<!-- ERROR_PASSWORD -->', errors.password)
                 .replace('<!-- SUCCES_BLOCK -->', '');
 
-            return res.send(filledHtml);
-        }
-
-        // Успешно — показать блок успеха
-        const successBlock = `
-        <h2 style="color: green;">Форма успешно отправлена</h2>
-        <p>Логин: ${escapeHtml(name)}</p>
-        <p>Пароль: ${escapeHtml(password)}</p>
-        <hr/>
-      `;
-
-        const successHtml = html
-            .replace('<!-- SUCCES_BLOCK -->', successBlock)
-            .replace('{* NAME_VALUE *}', '')
-            .replace('{* PASSWORD_VALUE *}', '')
-            .replace('<!-- ERROR_NAME -->', '')
-            .replace('<!-- ERROR_PASSWORD -->', '');
-
-        res.send(successHtml);
-    });
+            res.send(pageHtml);
+        });
+    } else {
+        res.redirect(`/submit/success?name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`);
+    }
 });
+
 
 module.exports = router;
