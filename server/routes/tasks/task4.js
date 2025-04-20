@@ -91,6 +91,8 @@ router.get('/success', (req, res) => {
         tempData = content ? JSON.parse(content) : {};
     }
 
+    console.log('Temp Data:', tempData);
+    
     const data = tempData[hash];
     if (!data) return res.redirect('/submit');
 
