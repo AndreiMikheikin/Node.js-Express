@@ -6,8 +6,7 @@ const crypto = require('crypto');
 const router = express.Router();
 
 const HTML_FILE_PATH = path.join(__dirname, '../../build/task4/index.html');
-const SUCCESS_FILE_PATH = path.join(__dirname, '../../../build/task4/success.html');
-console.log(SUCCESS_FILE_PATH);
+const SUCCESS_FILE_PATH = path.join(__dirname, '../../build/task4/success.html');
 const TEMP_DATA_PATH = path.join(__dirname, '../data/temp.json');
 
 
