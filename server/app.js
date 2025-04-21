@@ -46,8 +46,8 @@ app.get('/task4/success', async (req, res) => {
       .replace('<!-- PASSWORD -->', userData.password);
 
     // Удаляем использованные данные
-    delete tempData[hash];
-    await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
+    //delete tempData[hash];
+    //await fs.writeFile(TEMP_DATA_PATH, JSON.stringify(tempData, null, 2));
 
     res.send(filledHtml);
   } catch (err) {
