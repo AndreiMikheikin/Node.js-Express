@@ -7,6 +7,7 @@ const ExtraTask1 = () => {
   const [config, setConfig] = useState(null);
   const [response, setResponse] = useState(null);
   const [savedConfigs, setSavedConfigs] = useState(() => {
+    // Загружаем сохраненные конфигурации из localStorage при инициализации
     const saved = localStorage.getItem('savedConfigs');
     return saved ? JSON.parse(saved) : [];
   });
@@ -14,13 +15,13 @@ const ExtraTask1 = () => {
   const handleSaveConfig = (newConfig) => {
     const updatedConfigs = [...savedConfigs, newConfig];
     setSavedConfigs(updatedConfigs);
-    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs)); // Сохраняем
+    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs)); // Сохраняем в localStorage
   };
 
   const handleDeleteConfig = (index) => {
     const updatedConfigs = savedConfigs.filter((_, i) => i !== index);
     setSavedConfigs(updatedConfigs);
-    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs));
+    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs)); // Сохраняем изменения в localStorage
   };
 
   const handleSendRequest = async (requestConfig) => {
@@ -33,6 +34,7 @@ const ExtraTask1 = () => {
         body: JSON.stringify(requestConfig), // Отправка конфигурации запроса
       });
 
+      // Получаем и обрабатываем ответ от сервера
       const responseData = await response.json();
       setResponse({
         status: responseData.status,
@@ -45,7 +47,7 @@ const ExtraTask1 = () => {
         status: 'Error',
         headers: {},
         contentType: '',
-        body: error.message,
+        body: error.message, // Обрабатываем ошибки
       });
     }
   };
@@ -53,15 +55,20 @@ const ExtraTask1 = () => {
   return (
     <div>
       <h2>Мини Postman</h2>
+      {/* Компонент для формы запроса */}
       <RequestForm onSendRequest={handleSendRequest} onSave={handleSaveConfig} />
+
+      {/* Список сохраненных конфигураций */}
       <ConfigList
         configs={savedConfigs}
         onSelect={setConfig}
         onDelete={handleDeleteConfig}
       />
+
+      {/* Просмотр ответа от сервера */}
       <ResponseViewer response={response} />
     </div>
   );
-}
+};
 
 export default ExtraTask1;
