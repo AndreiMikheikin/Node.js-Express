@@ -1,6 +1,11 @@
 import React from 'react';
 
-function ResponseView({ response }) {
+const ResponseView = ({ response }) => {
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(response.body);
+    alert('Ответ скопирован!');
+  };
+
   if (!response) {
     return <div><h2>Ответ</h2><p>Ответ ещё не получен.</p></div>;
   }
@@ -32,6 +37,8 @@ function ResponseView({ response }) {
           {response.body}
         </pre>
       </div>
+
+      <button onClick={copyToClipboard}>Копировать ответ</button>
     </div>
   );
 }

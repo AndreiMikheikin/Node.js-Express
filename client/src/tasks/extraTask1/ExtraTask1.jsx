@@ -3,52 +3,50 @@ import RequestForm from '../../components/extraTask1/RequestForm';
 import ResponseViewer from '../../components/extraTask1/ResponseViewer';
 import ConfigList from '../../components/extraTask1/ConfigList';
 
-function ExtraTask1() {
+const ExtraTask1 = () => {
   const [config, setConfig] = useState(null);
   const [response, setResponse] = useState(null);
-  const [savedConfigs, setSavedConfigs] = useState([]);
+  const [savedConfigs, setSavedConfigs] = useState(() => {
+    // Загрузка из localStorage при инициализации
+    const saved = localStorage.getItem('savedConfigs');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const handleSaveConfig = (newConfig) => {
-    setSavedConfigs(prev => [...prev, newConfig]);
+    const updatedConfigs = [...savedConfigs, newConfig];
+    setSavedConfigs(updatedConfigs);
+    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs)); // Сохраняем
+  };
+
+  const handleDeleteConfig = (index) => {
+    const updatedConfigs = savedConfigs.filter((_, i) => i !== index);
+    setSavedConfigs(updatedConfigs);
+    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs));
   };
 
   const handleSendRequest = async (requestConfig) => {
     try {
-      const { url, method, headers, body } = requestConfig;
-      const options = {
-        method,
-        headers: headers || {},
-      };
-
-      if (body && (method !== 'GET' && method !== 'HEAD')) {
-        options.body = body;
-      }
-
-      const res = await fetch(url, options);
-      const contentType = res.headers.get('Content-Type');
-      let data;
-
-      if (contentType && contentType.includes('application/json')) {
-        data = await res.json();
-      } else if (contentType && contentType.startsWith('image/')) {
-        data = await res.blob();
-      } else {
-        data = await res.text();
-      }
-
-      setResponse({
-        status: res.status,
-        headers: Object.fromEntries(res.headers.entries()),
-        contentType,
-        body: data
+      const response = await fetch('/api/proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestConfig),
       });
 
+      const responseData = await response.json();
+      setResponse({
+        status: responseData.status,
+        headers: responseData.headers,
+        contentType: responseData.contentType,
+        body: responseData.body,
+      });
     } catch (error) {
       setResponse({
         status: 'Error',
         headers: {},
         contentType: '',
-        body: error.message
+        body: error.message,
       });
     }
   };
@@ -57,7 +55,11 @@ function ExtraTask1() {
     <div>
       <h2>Мини Postman</h2>
       <RequestForm onSubmit={handleSendRequest} onSave={handleSaveConfig} />
-      <ConfigList configs={savedConfigs} onSelect={setConfig} />
+      <ConfigList
+        configs={savedConfigs}
+        onSelect={setConfig}
+        onDelete={handleDeleteConfig}
+      />
       <ResponseViewer response={response} />
     </div>
   );

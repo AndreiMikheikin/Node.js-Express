@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-function RequestForm({ onSendRequest }) {
+const RequestForm = ({ onSendRequest }) => {
   const [url, setUrl] = useState('');
   const [method, setMethod] = useState('GET');
   const [headers, setHeaders] = useState([{ key: '', value: '' }]);
@@ -24,44 +24,33 @@ function RequestForm({ onSendRequest }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     try {
-      // Формируем объект заголовков
       const headerObject = headers.reduce((acc, { key, value }) => {
         if (key) acc[key] = value;
         return acc;
       }, {});
-
-      // Проверяем URL
-      if (!url) {
-        alert("Пожалуйста, введите URL.");
-        return;
+  
+      // Парсим тело, если это JSON
+      let parsedBody = body;
+      if (body && body.trim().startsWith('{')) {
+        try {
+          parsedBody = JSON.parse(body);
+        } catch (e) {
+          alert('Тело запроса не является валидным JSON');
+          return;
+        }
       }
-
-      // Проверяем тело запроса для GET/HEAD
-      if ((method === 'GET' || method === 'HEAD') && body) {
-        alert("Методы GET и HEAD не поддерживают тело запроса.");
-        return;
-      }
-
-      // Подготавливаем конфигурацию
+  
       const config = { 
         url, 
         method, 
-        headers: headerObject, 
-        ...(method !== 'GET' && method !== 'HEAD' && { body }) 
+        headers: headerObject,
+        ...(method !== 'GET' && method !== 'HEAD' && { body: typeof parsedBody === 'object' ? JSON.stringify(parsedBody) : parsedBody })
       };
       
-      // Проверяем и вызываем callback
-      if (typeof onSendRequest === 'function') {
-        onSendRequest(config);
-      } else {
-        console.error('onSendRequest не является функцией');
-        alert('Ошибка: обработчик запроса не настроен');
-      }
+      onSendRequest(config);
     } catch (error) {
-      console.error('Ошибка при отправке формы:', error);
-      alert('Произошла ошибка при формировании запроса');
+      alert(`Ошибка: ${error.message}`);
     }
   };
 

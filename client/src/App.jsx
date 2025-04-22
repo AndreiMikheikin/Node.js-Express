@@ -7,7 +7,7 @@ import Task3 from './tasks/task3/Task3';
 import Task4 from './tasks/task4/Task4';
 import ExtraTask1 from './tasks/extraTask1/ExtraTask1';
 
-function App() {
+const App = () => {
   return (
     <Router>
       <div className="app">
