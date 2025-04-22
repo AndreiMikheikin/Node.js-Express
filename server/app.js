@@ -34,13 +34,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Точечно для API
-app.use('/api', cors({
-  origin: 'http://178.250.247.67:3333',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
 // API маршруты
 app.use('/api', tasksRouter);
 
