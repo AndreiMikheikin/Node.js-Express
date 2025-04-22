@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import NextTask from './tasks/nextTask/nextTask';
 import Task1 from './tasks/task1/Task1';
-import Task2 from './tasks/task2/Task2'; 
+import Task2 from './tasks/task2/Task2';
 import Task3 from './tasks/task3/Task3';
 import Task4 from './tasks/task4/Task4';
 import ExtraTask1 from './tasks/extraTask1/ExtraTask1';
@@ -37,6 +37,13 @@ function App() {
           <Route path="/task4" element={<Task4 />} />
           <Route path="/extraTask1" element={<ExtraTask1 />} />
           <Route path="/nextTask" element={<NextTask />} />
+
+          <Route path="/" element={
+            <div className="welcome-message">
+              <h2>Добро пожаловать!</h2>
+              <p>Выберите задание из списка выше</p>
+            </div>
+          } />
         </Routes>
       </div>
     </Router>

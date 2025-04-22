@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 function RequestForm({ onSendRequest }) {
   const [url, setUrl] = useState('');
@@ -16,15 +17,52 @@ function RequestForm({ onSendRequest }) {
     setHeaders([...headers, { key: '', value: '' }]);
   };
 
+  const removeHeader = (index) => {
+    const updatedHeaders = headers.filter((_, i) => i !== index);
+    setHeaders(updatedHeaders);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const headerObject = headers.reduce((acc, { key, value }) => {
-      if (key) acc[key] = value;
-      return acc;
-    }, {});
 
-    const config = { url, method, headers: headerObject, body };
-    onSendRequest(config);
+    try {
+      // Формируем объект заголовков
+      const headerObject = headers.reduce((acc, { key, value }) => {
+        if (key) acc[key] = value;
+        return acc;
+      }, {});
+
+      // Проверяем URL
+      if (!url) {
+        alert("Пожалуйста, введите URL.");
+        return;
+      }
+
+      // Проверяем тело запроса для GET/HEAD
+      if ((method === 'GET' || method === 'HEAD') && body) {
+        alert("Методы GET и HEAD не поддерживают тело запроса.");
+        return;
+      }
+
+      // Подготавливаем конфигурацию
+      const config = { 
+        url, 
+        method, 
+        headers: headerObject, 
+        ...(method !== 'GET' && method !== 'HEAD' && { body }) 
+      };
+      
+      // Проверяем и вызываем callback
+      if (typeof onSendRequest === 'function') {
+        onSendRequest(config);
+      } else {
+        console.error('onSendRequest не является функцией');
+        alert('Ошибка: обработчик запроса не настроен');
+      }
+    } catch (error) {
+      console.error('Ошибка при отправке формы:', error);
+      alert('Произошла ошибка при формировании запроса');
+    }
   };
 
   return (
@@ -70,6 +108,7 @@ function RequestForm({ onSendRequest }) {
               onChange={(e) => handleHeaderChange(index, 'value', e.target.value)}
               placeholder="Значение"
             />
+            <button type="button" onClick={() => removeHeader(index)}>Удалить</button>
           </div>
         ))}
         <button type="button" onClick={addHeader}>Добавить заголовок</button>
@@ -91,5 +130,13 @@ function RequestForm({ onSendRequest }) {
     </form>
   );
 }
+
+RequestForm.propTypes = {
+  onSendRequest: PropTypes.func.isRequired
+};
+
+RequestForm.defaultProps = {
+  onSendRequest: (config) => console.log('Конфигурация запроса:', config)
+};
 
 export default RequestForm;
