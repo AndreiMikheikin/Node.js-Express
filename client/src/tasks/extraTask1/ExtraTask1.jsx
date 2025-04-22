@@ -7,7 +7,6 @@ const ExtraTask1 = () => {
   const [config, setConfig] = useState(null);
   const [response, setResponse] = useState(null);
   const [savedConfigs, setSavedConfigs] = useState(() => {
-    // Загрузка из localStorage при инициализации
     const saved = localStorage.getItem('savedConfigs');
     return saved ? JSON.parse(saved) : [];
   });
@@ -26,12 +25,12 @@ const ExtraTask1 = () => {
 
   const handleSendRequest = async (requestConfig) => {
     try {
-      const response = await fetch('/api/proxy', {
+      const response = await fetch('http://178.250.247.67:3333/api/proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestConfig),
+        body: JSON.stringify(requestConfig), // Отправка конфигурации запроса
       });
 
       const responseData = await response.json();
@@ -54,7 +53,7 @@ const ExtraTask1 = () => {
   return (
     <div>
       <h2>Мини Postman</h2>
-      <RequestForm onSubmit={handleSendRequest} onSave={handleSaveConfig} />
+      <RequestForm onSendRequest={handleSendRequest} onSave={handleSaveConfig} />
       <ConfigList
         configs={savedConfigs}
         onSelect={setConfig}

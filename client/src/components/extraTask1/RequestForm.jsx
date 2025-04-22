@@ -30,7 +30,6 @@ const RequestForm = ({ onSendRequest }) => {
         return acc;
       }, {});
   
-      // Парсим тело, если это JSON
       let parsedBody = body;
       if (body && body.trim().startsWith('{')) {
         try {
