@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Для fetch в Node.js
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = global //(...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 router.post('/proxy', async (req, res) => {
   try {
