@@ -26,7 +26,7 @@ const ExtraTask1 = () => {
 
   const handleSendRequest = async (requestConfig) => {
     try {
-      const response = await fetch('http://178.250.247.67:3333//api/extraTask1/proxy', {
+      const response = await fetch('http://178.250.247.67:3333/api/extraTask1/proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
