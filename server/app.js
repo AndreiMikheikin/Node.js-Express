@@ -81,17 +81,6 @@ app.get('/task4/success', async (req, res) => {
   }
 });
 
-//обработка запроса для extraTask1
-app.post('/api/proxy', (req, res) => {
-  console.log(req.body); // Логируем тело запроса
-  res.json({
-    status: 'success',
-    headers: req.headers,
-    contentType: req.headers['content-type'],
-    body: req.body,
-  });
-});
-
 // Фоллбэк для React (если путь не найден среди вышеуказанных)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../build/index.html'));

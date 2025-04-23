@@ -1,9 +1,19 @@
 const express = require('express');
 const router = express.Router();
 
+// Для fetch в Node.js
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 router.post('/proxy', async (req, res) => {
   try {
     const { url, method, headers, body } = req.body;
+
+    // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС
+    console.log('📡 Получен прокси-запрос:');
+    console.log('➡️ Метод:', method);
+    console.log('🌍 URL:', url);
+    console.log('📬 Заголовки:', headers);
+    console.log('📝 Тело:', body);
 
     // Валидация URL
     if (!url || !/^https?:\/\/.+/.test(url)) {
@@ -12,22 +22,28 @@ router.post('/proxy', async (req, res) => {
 
     // Формируем опции для fetch
     const fetchOptions = {
-      method: method || 'GET',  // Метод по умолчанию — GET
-      headers: headers || {},   // Заголовки запроса
+      method: method || 'GET',
+      headers: headers || {},
     };
 
-    // Если передано тело, добавляем его в fetch
     if (body && method !== 'GET' && method !== 'HEAD') {
-      fetchOptions.body = JSON.stringify(body);  // Сериализуем тело в JSON
+      // Проверка на Content-Type и сериализация при необходимости
+      if (
+        headers['Content-Type']?.includes('application/json') ||
+        headers['content-type']?.includes('application/json')
+      ) {
+        fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+      } else {
+        fetchOptions.body = body;
+      }
     }
 
-    // Выполняем запрос
+    // Выполняем прокси-запрос
     const response = await fetch(url, fetchOptions);
-
     const contentType = response.headers.get('content-type') || '';
     let responseBody;
 
-    // Обрабатываем разные типы контента
+    // Обработка типов контента
     if (contentType.includes('application/json')) {
       responseBody = await response.json();
     } else if (contentType.startsWith('image/')) {
@@ -37,17 +53,24 @@ router.post('/proxy', async (req, res) => {
       responseBody = await response.text();
     }
 
-    // Возвращаем результат
+    // 🔁 ЛОГИРУЕМ ОТВЕТ
+    console.log('✅ Ответ от целевого сервера:');
+    console.log('📥 Статус:', response.status, response.statusText);
+    console.log('📦 Заголовки:', Object.fromEntries(response.headers.entries()));
+    console.log('📄 Content-Type:', contentType);
+
+    // Отправляем клиенту
     res.json({
       status: response.status,
       statusText: response.statusText,
       headers: Object.fromEntries(response.headers.entries()),
       contentType,
-      body: responseBody
+      body: responseBody,
+      isBase64Encoded: contentType.startsWith('image/')
     });
 
   } catch (err) {
-    console.error(err);
+    console.error('❌ Ошибка при выполнении запроса:', err);
     res.status(500).json({ error: 'Ошибка при выполнении запроса' });
   }
 });

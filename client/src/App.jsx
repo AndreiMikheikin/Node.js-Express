@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import NextTask from './tasks/nextTask/nextTask';
 import Task1 from './tasks/task1/Task1';
 import Task2 from './tasks/task2/Task2';
@@ -14,19 +14,19 @@ const App = () => {
         <nav>
           <h1>Node.js/Express задания</h1>
           <ul>
-            <li><Link to="/task1">Задание 1 - Голосование</Link></li>
-            <li><Link to="/task2">Задание 2 - Форма валидации</Link></li>
-            <li><Link to="/task3">Задание 3 - Загрузка статистики голосования</Link></li>
-            <li><Link to="/task4">Задание 4 - Форма валидации POST</Link></li>
+            <li><NavLink to="/task1" activeClassName="active">Задание 1 - Голосование</NavLink></li>
+            <li><NavLink to="/task2" activeClassName="active">Задание 2 - Форма валидации</NavLink></li>
+            <li><NavLink to="/task3" activeClassName="active">Задание 3 - Загрузка статистики голосования</NavLink></li>
+            <li><NavLink to="/task4" activeClassName="active">Задание 4 - Форма валидации POST</NavLink></li>
             <li>-------------------------------------------</li>
             <li>
               Контрольные задания:
               <ul>
-                <li><Link to="/extraTask1">Контрольное задание 1 - Мини Postman</Link></li>
+                <li><NavLink to="/extraTask1" activeClassName="active">Контрольное задание 1 - Мини Postman</NavLink></li>
               </ul>
             </li>
             <li>-------------------------------------------</li>
-            <li><Link to="/nextTask">Следующее задание</Link></li>
+            <li><NavLink to="/nextTask" activeClassName="active">Следующее задание</NavLink></li>
           </ul>
         </nav>
 
