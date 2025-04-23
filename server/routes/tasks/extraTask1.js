@@ -1,59 +1,71 @@
 const express = require('express');
 const router = express.Router();
-
-// Для fetch в Node.js
-const fetch = global //(...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fetch = require('node-fetch');
 
 router.post('/proxy', async (req, res) => {
   try {
-    const { url, method = 'GET', headers = {}, body } = req.body;
-
-    // Валидация URL
-    if (!url || !url.startsWith('http')) {
-      return res.status(400).json({ error: 'Invalid URL' });
+    // Валидация входных данных
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Invalid request body' });
     }
 
-    // Добавляем обязательные заголовки
-    const finalHeaders = {
+    const { url, method = 'GET', headers = {}, body } = req.body;
+
+    // Проверка обязательных полей
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'URL is required and must be a string' });
+    }
+
+    // Проверка валидности URL
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    // Базовые заголовки
+    const requestHeaders = {
       'Accept': 'application/json',
       ...headers
     };
 
-    const options = {
-      method,
-      headers: finalHeaders,
-      timeout: 10000 // 10 секунд таймаут
+    // Конфигурация запроса
+    const fetchOptions = {
+      method: method.toUpperCase(),
+      headers: requestHeaders,
+      timeout: 10000
     };
 
-    if (body && method !== 'GET' && method !== 'HEAD') {
-      options.body = JSON.stringify(body);
+    // Добавляем тело запроса для не-GET методов
+    if (body && !['GET', 'HEAD'].includes(method.toUpperCase())) {
+      fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
 
     // Выполняем запрос
-    const response = await fetch(url, options);
+    const response = await fetch(url, fetchOptions);
     
-    // Получаем все заголовки ответа
+    // Получаем ответ
+    const responseBody = await response.text();
     const responseHeaders = {};
     response.headers.forEach((value, key) => {
       responseHeaders[key] = value;
     });
 
-    // Определяем Content-Type
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-
+    // Отправляем ответ клиенту
     res.json({
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
-      contentType,
-      body: await response.text()
+      contentType: response.headers.get('content-type') || 'application/octet-stream',
+      body: responseBody
     });
 
   } catch (err) {
     console.error('Proxy error:', err);
     res.status(500).json({ 
-      error: 'Proxy failed',
-      details: err.message
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
   }
 });
