@@ -6,72 +6,55 @@ const fetch = global //(...args) => import('node-fetch').then(({ default: fetch 
 
 router.post('/proxy', async (req, res) => {
   try {
-    const { url, method, headers, body } = req.body;
-
-    // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС
-    console.log('📡 Получен прокси-запрос:');
-    console.log('➡️ Метод:', method);
-    console.log('🌍 URL:', url);
-    console.log('📬 Заголовки:', headers);
-    console.log('📝 Тело:', body);
+    const { url, method = 'GET', headers = {}, body } = req.body;
 
     // Валидация URL
-    if (!url || !/^https?:\/\/.+/.test(url)) {
-      return res.status(400).json({ error: 'Некорректный URL' });
+    if (!url || !url.startsWith('http')) {
+      return res.status(400).json({ error: 'Invalid URL' });
     }
 
-    // Формируем опции для fetch
-    const fetchOptions = {
-      method: method || 'GET',
-      headers: headers || {},
+    // Добавляем обязательные заголовки
+    const finalHeaders = {
+      'Accept': 'application/json',
+      ...headers
+    };
+
+    const options = {
+      method,
+      headers: finalHeaders,
+      timeout: 10000 // 10 секунд таймаут
     };
 
     if (body && method !== 'GET' && method !== 'HEAD') {
-      // Проверка на Content-Type и сериализация при необходимости
-      if (
-        headers['Content-Type']?.includes('application/json') ||
-        headers['content-type']?.includes('application/json')
-      ) {
-        fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
-      } else {
-        fetchOptions.body = body;
-      }
+      options.body = JSON.stringify(body);
     }
 
-    // Выполняем прокси-запрос
-    const response = await fetch(url, fetchOptions);
-    const contentType = response.headers.get('content-type') || '';
-    let responseBody;
+    // Выполняем запрос
+    const response = await fetch(url, options);
+    
+    // Получаем все заголовки ответа
+    const responseHeaders = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
 
-    // Обработка типов контента
-    if (contentType.includes('application/json')) {
-      responseBody = await response.json();
-    } else if (contentType.startsWith('image/')) {
-      const buffer = await response.arrayBuffer();
-      responseBody = Buffer.from(buffer).toString('base64');
-    } else {
-      responseBody = await response.text();
-    }
+    // Определяем Content-Type
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
 
-    // 🔁 ЛОГИРУЕМ ОТВЕТ
-    console.log('✅ Ответ от целевого сервера:');
-    console.log('📥 Статус:', response.status, response.statusText);
-    console.log('📦 Заголовки:', Object.fromEntries(response.headers.entries()));
-    console.log('📄 Content-Type:', contentType);
-
-    // Отправляем клиенту
     res.json({
       status: response.status,
       statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
+      headers: responseHeaders,
       contentType,
-      body: responseBody,
-      isBase64Encoded: contentType.startsWith('image/')
+      body: await response.text()
     });
 
   } catch (err) {
-    console.error('❌ Ошибка при выполнении запроса:', err);
-    res.status(500).json({ error: 'Ошибка при выполнении запроса' });
+    console.error('Proxy error:', err);
+    res.status(500).json({ 
+      error: 'Proxy failed',
+      details: err.message
+    });
   }
 });
 
