@@ -22,6 +22,36 @@ const RequestForm = ({ onSendRequest }) => {
     setHeaders(updatedHeaders);
   };
 
+  const handleSaveClick = () => {
+    const newConfig = {
+      url,
+      method,
+      headers,
+      body,
+    };
+  
+    // Получаем уже сохранённые конфигурации
+    const savedConfigs = JSON.parse(localStorage.getItem('savedRequestConfigs')) || [];
+  
+    // Проверка: есть ли уже такая конфигурация
+    const isDuplicate = savedConfigs.some(config =>
+      config.url === newConfig.url &&
+      config.method === newConfig.method &&
+      JSON.stringify(config.headers) === JSON.stringify(newConfig.headers) &&
+      config.body === newConfig.body
+    );
+  
+    if (isDuplicate) {
+      alert('Такая конфигурация уже сохранена!');
+      return;
+    }
+  
+    // Добавляем и сохраняем
+    savedConfigs.push(newConfig);
+    localStorage.setItem('savedRequestConfigs', JSON.stringify(savedConfigs));
+    alert('Конфигурация успешно сохранена!');
+  }; 
+
   const handleSubmit = (e) => {
     e.preventDefault();
     try {
@@ -29,7 +59,7 @@ const RequestForm = ({ onSendRequest }) => {
         if (key) acc[key] = value;
         return acc;
       }, {});
-  
+
       let parsedBody = body;
       if (body && body.trim().startsWith('{')) {
         try {
@@ -39,14 +69,14 @@ const RequestForm = ({ onSendRequest }) => {
           return;
         }
       }
-  
-      const config = { 
-        url, 
-        method, 
+
+      const config = {
+        url,
+        method,
         headers: headerObject,
         ...(method !== 'GET' && method !== 'HEAD' && { body: typeof parsedBody === 'object' ? JSON.stringify(parsedBody) : parsedBody })
       };
-      
+
       onSendRequest(config);
     } catch (error) {
       alert(`Ошибка: ${error.message}`);
@@ -100,6 +130,7 @@ const RequestForm = ({ onSendRequest }) => {
           </div>
         ))}
         <button type="button" onClick={addHeader}>Добавить заголовок</button>
+        <button type="button" onClick={handleSaveClick}>Сохранить конфигурацию</button>
       </div>
 
       {(method !== 'GET' && method !== 'HEAD') && (
@@ -124,7 +155,7 @@ RequestForm.propTypes = {
 };
 
 RequestForm.defaultProps = {
-  onSendRequest: (config) => console.log('Конфигурация запроса:', config)
+  onSendRequest: (config) => {console.log('Конфигурация запроса:', config)}
 };
 
 export default RequestForm;
