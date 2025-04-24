@@ -56,7 +56,11 @@ const ExtraTask1 = () => {
     <div>
       <h2>Мини Postman</h2>
       {/* Компонент для формы запроса */}
-      <RequestForm onSendRequest={handleSendRequest} onSave={handleSaveConfig} />
+      <RequestForm
+        onSendRequest={handleSendRequest}
+        onSave={handleSaveConfig}
+        selectedConfig={config}
+      />
 
       {/* Список сохраненных конфигураций */}
       <ConfigList

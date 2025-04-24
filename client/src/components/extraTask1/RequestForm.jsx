@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const RequestForm = ({ onSendRequest, onSelect }) => {
+const RequestForm = ({ onSendRequest, onSelect, selectedConfig }) => {
   const [url, setUrl] = useState('');
   const [method, setMethod] = useState('GET');
   const [headers, setHeaders] = useState([{ key: '', value: '' }]);
   const [body, setBody] = useState('');
+
+  useEffect(() => {
+    if (selectedConfig) {
+      setUrl(selectedConfig.url || '');
+      setMethod(selectedConfig.method || 'GET');
+      setHeaders(selectedConfig.headers?.length ? selectedConfig.headers : [{ key: '', value: '' }]);
+      setBody(selectedConfig.body || '');
+    }
+  }, [selectedConfig]);
 
   useEffect(() => {
     if (onSelect) {

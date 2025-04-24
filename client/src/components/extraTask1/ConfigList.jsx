@@ -29,7 +29,7 @@ const ConfigList = ({ onSelect }) => {
             <li key={index}>
               <button onClick={() => handleSelect(config)}>Выбрать</button>
               <button onClick={() => handleDelete(index)}>Удалить</button>
-              <strong>{config.method}</strong> {config.url}
+              <strong>{config.method}</strong> {config.url} <sub>{config.headers}</sub> <sub>{config.body}</sub>
             </li>
           ))}
         </ul>
