@@ -10,7 +10,7 @@ router.post('/proxy', async (req, res) => {
 
     const { url, method = 'GET', headers = {}, body } = req.body;
 
-    // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС
+    // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС (после деструктуризации!)
     console.log('📡 Получен прокси-запрос:');
     console.log('➡️ Метод:', method);
     console.log('🌍 URL:', url);
@@ -53,15 +53,13 @@ router.post('/proxy', async (req, res) => {
     
     // Получаем ответ
     const responseBody = await response.text();
-    const responseHeaders = {};
-    response.headers.forEach((value, key) => {
-      responseHeaders[key] = value;
-    });
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    const contentType = response.headers.get('content-type') || 'application/octet-stream';
 
     // 🔁 ЛОГИРУЕМ ОТВЕТ
     console.log('✅ Ответ от целевого сервера:');
     console.log('📥 Статус:', response.status, response.statusText);
-    console.log('📦 Заголовки:', Object.fromEntries(response.headers.entries()));
+    console.log('📦 Заголовки:', responseHeaders);
     console.log('📄 Content-Type:', contentType);
 
     // Отправляем ответ клиенту
@@ -69,7 +67,7 @@ router.post('/proxy', async (req, res) => {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
-      contentType: response.headers.get('content-type') || 'application/octet-stream',
+      contentType: contentType,
       body: responseBody
     });
 
