@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 const RequestForm = ({ onSendRequest }) => {
@@ -6,6 +6,12 @@ const RequestForm = ({ onSendRequest }) => {
   const [method, setMethod] = useState('GET');
   const [headers, setHeaders] = useState([{ key: '', value: '' }]);
   const [body, setBody] = useState('');
+
+  useEffect(() => {
+    if (method === 'GET' || method === 'HEAD') {
+      setBody('');
+    }
+  }, [method]);
 
   const handleHeaderChange = (index, field, value) => {
     const updatedHeaders = [...headers];
@@ -18,39 +24,49 @@ const RequestForm = ({ onSendRequest }) => {
   };
 
   const removeHeader = (index) => {
-    const updatedHeaders = headers.filter((_, i) => i !== index);
-    setHeaders(updatedHeaders);
+    setHeaders(headers.filter((_, i) => i !== index));
+  };
+
+  const clearForm = () => {
+    setUrl('');
+    setMethod('GET');
+    setHeaders([{ key: '', value: '' }]);
+    setBody('');
+  };
+
+  const saveConfig = () => {
+    const config = { url, method, headers, body };
+    const existing = JSON.parse(localStorage.getItem('savedRequests')) || [];
+    const updated = [...existing.filter(r => !(r.url === url && r.method === method)), config];
+    localStorage.setItem('savedRequests', JSON.stringify(updated));
+    alert('Конфигурация сохранена');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const headerObject = headers.reduce((acc, { key, value }) => {
-        if (key) acc[key] = value;
-        return acc;
-      }, {});
-  
-      let parsedBody = body;
-      if (body && body.trim().startsWith('{')) {
-        try {
-          parsedBody = JSON.parse(body);
-        } catch (e) {
-          alert('Тело запроса не является валидным JSON');
-          return;
-        }
+    const headerObject = headers.reduce((acc, { key, value }) => {
+      if (key) acc[key] = value;
+      return acc;
+    }, {});
+
+    let parsedBody = body;
+    if (body && body.trim().startsWith('{')) {
+      try {
+        parsedBody = JSON.parse(body);
+      } catch (e) {
+        alert('Тело запроса не является валидным JSON');
+        return;
       }
-  
-      const config = { 
-        url, 
-        method, 
-        headers: headerObject,
-        ...(method !== 'GET' && method !== 'HEAD' && { body: typeof parsedBody === 'object' ? JSON.stringify(parsedBody) : parsedBody })
-      };
-      
-      onSendRequest(config);
-    } catch (error) {
-      alert(`Ошибка: ${error.message}`);
     }
+
+    const config = {
+      url,
+      method,
+      headers: headerObject,
+      ...(method !== 'GET' && method !== 'HEAD' && { body: typeof parsedBody === 'object' ? JSON.stringify(parsedBody) : parsedBody })
+    };
+
+    onSendRequest(config);
   };
 
   return (
@@ -115,16 +131,14 @@ const RequestForm = ({ onSendRequest }) => {
       )}
 
       <button type="submit">Отправить запрос</button>
+      <button type="button" onClick={clearForm}>Очистить форму</button>
+      <button type="button" onClick={saveConfig}>Сохранить конфигурацию</button>
     </form>
   );
-}
+};
 
 RequestForm.propTypes = {
   onSendRequest: PropTypes.func.isRequired
-};
-
-RequestForm.defaultProps = {
-  onSendRequest: (config) => console.log('Конфигурация запроса:', config)
 };
 
 export default RequestForm;
