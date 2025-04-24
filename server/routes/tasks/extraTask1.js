@@ -3,16 +3,24 @@ const router = express.Router();
 
 router.post('/proxy', async (req, res) => {
   try {
+
+    // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС
+    console.log('📡 Получен прокси-запрос:');
+    console.log('➡️ Метод:', method);
+    console.log('🌍 URL:', url);
+    console.log('📬 Заголовки:', headers);
+    console.log('📝 Тело:', body);
+
     // Валидация входных данных
     if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ error: 'Invalid request body' });
+      return res.status(400).json({ error: 'Ошибка в body запроса' });
     }
 
     const { url, method = 'GET', headers = {}, body } = req.body;
 
     // Проверка обязательных полей
     if (!url || typeof url !== 'string') {
-      return res.status(400).json({ error: 'URL is required and must be a string' });
+      return res.status(400).json({ error: 'Нужен URL в формате string' });
     }
 
     // Проверка валидности URL
@@ -20,7 +28,7 @@ router.post('/proxy', async (req, res) => {
     try {
       parsedUrl = new URL(url);
     } catch (e) {
-      return res.status(400).json({ error: 'Invalid URL format' });
+      return res.status(400).json({ error: 'Не правильный формат URL' });
     }
 
     // Базовые заголовки
@@ -51,6 +59,12 @@ router.post('/proxy', async (req, res) => {
       responseHeaders[key] = value;
     });
 
+    // 🔁 ЛОГИРУЕМ ОТВЕТ
+    console.log('✅ Ответ от целевого сервера:');
+    console.log('📥 Статус:', response.status, response.statusText);
+    console.log('📦 Заголовки:', Object.fromEntries(response.headers.entries()));
+    console.log('📄 Content-Type:', contentType);
+
     // Отправляем ответ клиенту
     res.json({
       status: response.status,
@@ -61,7 +75,7 @@ router.post('/proxy', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Proxy error:', err);
+    console.error('❌ Ошибка при выполнении запроса:', err);
     res.status(500).json({ 
       error: 'Internal server error',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined
