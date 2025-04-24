@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const RequestForm = ({ onSendRequest }) => {
+const RequestForm = ({ onSendRequest, onSelect }) => {
   const [url, setUrl] = useState('');
   const [method, setMethod] = useState('GET');
   const [headers, setHeaders] = useState([{ key: '', value: '' }]);
@@ -15,7 +15,7 @@ const RequestForm = ({ onSendRequest }) => {
       setBody(onSelect.body || '');
     }
   }, [onSelect]);
-  
+
   useEffect(() => {
     if (method === 'GET' || method === 'HEAD') {
       setBody('');
