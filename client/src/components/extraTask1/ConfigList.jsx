@@ -4,7 +4,7 @@ const ConfigList = ({ onSelect }) => {
   const [configs, setConfigs] = useState([]);
 
   useEffect(() => {
-    const storedConfigs = JSON.parse(localStorage.getItem('savedRequestConfigs')) || [];
+    const storedConfigs = JSON.parse(localStorage.getItem('savedRequests')) || [];
     setConfigs(storedConfigs);
   }, []);
 
