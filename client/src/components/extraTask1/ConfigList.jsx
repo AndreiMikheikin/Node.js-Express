@@ -11,7 +11,7 @@ const ConfigList = ({ onSelect }) => {
   const handleDelete = (index) => {
     const updatedConfigs = configs.filter((_, i) => i !== index);
     setConfigs(updatedConfigs);
-    localStorage.setItem('savedRequestConfigs', JSON.stringify(updatedConfigs));
+    localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs));
   };
 
   const handleSelect = (config) => {
