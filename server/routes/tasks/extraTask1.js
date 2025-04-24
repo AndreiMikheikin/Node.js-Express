@@ -3,6 +3,12 @@ const router = express.Router();
 
 router.post('/proxy', async (req, res) => {
   try {
+    // Валидация входных данных
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Ошибка в body запроса' });
+    }
+
+    const { url, method = 'GET', headers = {}, body } = req.body;
 
     // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС
     console.log('📡 Получен прокси-запрос:');
@@ -10,13 +16,6 @@ router.post('/proxy', async (req, res) => {
     console.log('🌍 URL:', url);
     console.log('📬 Заголовки:', headers);
     console.log('📝 Тело:', body);
-
-    // Валидация входных данных
-    if (!req.body || typeof req.body !== 'object') {
-      return res.status(400).json({ error: 'Ошибка в body запроса' });
-    }
-
-    const { url, method = 'GET', headers = {}, body } = req.body;
 
     // Проверка обязательных полей
     if (!url || typeof url !== 'string') {
