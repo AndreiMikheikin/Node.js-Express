@@ -8,6 +8,15 @@ const RequestForm = ({ onSendRequest }) => {
   const [body, setBody] = useState('');
 
   useEffect(() => {
+    if (onSelect) {
+      setUrl(onSelect.url);
+      setMethod(onSelect.method);
+      setHeaders(onSelect.headers || []);
+      setBody(onSelect.body || '');
+    }
+  }, [onSelect]);
+  
+  useEffect(() => {
     if (method === 'GET' || method === 'HEAD') {
       setBody('');
     }
