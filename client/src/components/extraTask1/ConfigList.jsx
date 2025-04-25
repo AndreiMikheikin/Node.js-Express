@@ -26,10 +26,20 @@ const ConfigList = ({ onSelect }) => {
       ) : (
         <ul>
           {configs.map((config, index) => (
-            <li key={index}>
-              <button onClick={() => handleSelect(config)}>Выбрать</button>
-              <button onClick={() => handleDelete(index)}>Удалить</button>
-              <strong>{config.method}</strong> {config.url} <sub>{JSON.stringify(config.headers)}</sub> <sub>{JSON.stringify(config.body)}</sub>
+            <li key={index} style={{ marginBottom: '1em' }}>
+              <button onClick={() => handleSelect(config)}>Выбрать</button>{' '}
+              <button onClick={() => handleDelete(index)}>Удалить</button><br />
+              <strong>{config.method}</strong> {config.url}<br />
+              <em>Заголовки:</em>
+              <ul>
+                {(config.headers || []).map((h, i) => (
+                  <li key={i}>
+                    {h.key}: {h.value}
+                  </li>
+                ))}
+              </ul>
+              <em>Тело:</em>
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{config.body}</pre>
             </li>
           ))}
         </ul>

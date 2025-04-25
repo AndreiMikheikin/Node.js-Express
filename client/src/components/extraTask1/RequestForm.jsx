@@ -53,10 +53,29 @@ const RequestForm = ({ onSendRequest, onSelect, selectedConfig }) => {
   };
 
   const saveConfig = () => {
-    const config = { url, method, headers, body };
-    const existing = JSON.parse(localStorage.getItem('savedRequests')) || [];
-    const updated = [...existing.filter(r => !(r.url === url && r.method === method)), config];
-    localStorage.setItem('savedRequests', JSON.stringify(updated));
+    const newConfig = { url, method, headers, body };
+  
+    const configs = JSON.parse(localStorage.getItem('savedRequests')) || [];
+  
+    const isSameHeaders = (a, b) =>
+      a.length === b.length && a.every((h, i) => h.key === b[i].key && h.value === b[i].value);
+  
+    const existingIndex = configs.findIndex(cfg =>
+      cfg.url === newConfig.url &&
+      cfg.method === newConfig.method &&
+      isSameHeaders(cfg.headers || [], newConfig.headers || []) &&
+      (cfg.body || '') === (newConfig.body || '')
+    );
+  
+    let updatedConfigs;
+    if (existingIndex !== -1) {
+      updatedConfigs = [...configs];
+      updatedConfigs[existingIndex] = newConfig;
+    } else {
+      updatedConfigs = [...configs, newConfig];
+    }
+  
+    localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs));
     alert('Конфигурация сохранена');
   };
 
