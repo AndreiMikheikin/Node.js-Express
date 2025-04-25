@@ -11,29 +11,9 @@ const Preview = ({ body, contentType }) => {
   }
 
   if (isSvg) {
-    // Очищаем SVG от HTML-сущностей и лишних пробелов
-    const cleanedSvg = body
-      .replace(/&quot;/g, '"')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .trim();
-    
-    // Создаем правильный Data URL для SVG
-    const svgDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(cleanedSvg)}`;
-    
     return (
       <div style={{ marginTop: '10px', textAlign: 'center' }}>
-        <img 
-          src={svgDataUrl} 
-          alt="SVG preview" 
-          style={{ 
-            maxWidth: '100%', 
-            maxHeight: '300px', 
-            border: '1px solid #eee',
-            backgroundColor: 'white'
-          }}
-        />
+        {body}
       </div>
     );
   }
