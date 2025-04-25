@@ -11,23 +11,33 @@ const Preview = ({ body, contentType }) => {
   }
 
   if (isSvg) {
-    // Для SVG создаем data URL
-    const svgDataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(body)}`;
+    // Очищаем SVG от HTML-сущностей и лишних пробелов
+    const cleanedSvg = body
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .trim();
+    
+    // Создаем правильный Data URL для SVG
+    const svgDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(cleanedSvg)}`;
+    
     return (
-      <div style={{ marginTop: '10px' }}>
+      <div style={{ marginTop: '10px', textAlign: 'center' }}>
         <img 
           src={svgDataUrl} 
           alt="SVG preview" 
-          style={{ maxWidth: '100%', maxHeight: '300px', border: '1px solid #eee' }}
+          style={{ 
+            maxWidth: '100%', 
+            maxHeight: '300px', 
+            border: '1px solid #eee',
+            backgroundColor: 'white'
+          }}
         />
-        <div style={{ marginTop: '5px', fontSize: '0.8em', color: '#666' }}>
-          SVG preview (размер можно изменить в стилях)
-        </div>
       </div>
     );
   }
 
-  // Для HTML оставляем как было
   if (contentType.includes('html') || /<[^>]+>/.test(body)) {
     return (
       <iframe
