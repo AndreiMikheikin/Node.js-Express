@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 const Preview = ({ body, contentType }) => {
   if (!body || typeof body !== 'string') return null;
@@ -6,15 +6,32 @@ const Preview = ({ body, contentType }) => {
   const isImage = contentType.startsWith('image/') || body.startsWith('data:image');
   const isSvg = contentType.includes('svg+xml') || body.trim().startsWith('<svg');
 
+  // SVG через объект Blob
+  const svgUrl = useMemo(() => {
+    if (isSvg) {
+      const blob = new Blob([body], { type: 'image/svg+xml' });
+      return URL.createObjectURL(blob);
+    }
+    return null;
+  }, [body, isSvg]);
+
   if (isImage && !isSvg) {
-    return <img src={body} alt="Превью изображения" style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }} />;
+    return (
+      <img
+        src={body}
+        alt="Превью изображения"
+        style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+      />
+    );
   }
 
-  if (isSvg) {
+  if (isSvg && svgUrl) {
     return (
-      <div style={{ marginTop: '10px', textAlign: 'center' }}>
-        dangerouslySetInnerHTML={{ __html: body }}
-      </div>
+      <img
+        src={svgUrl}
+        alt="SVG Превью"
+        style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+      />
     );
   }
 
