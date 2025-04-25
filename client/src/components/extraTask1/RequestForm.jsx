@@ -12,11 +12,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
     if (selectedConfig) {
       setUrl(selectedConfig.url || '');
       setMethod(selectedConfig.method || 'GET');
-      setHeaders(
-        selectedConfig.headers && Object.keys(selectedConfig.headers).length
-          ? Object.entries(selectedConfig.headers).map(([key, value]) => ({ key, value }))
-          : [{ key: '', value: '' }]
-      );
+      setHeaders(selectedConfig.headers?.length ? selectedConfig.headers : [{ key: '', value: '' }]);
       setBody(selectedConfig.body || '');
     }
   }, [selectedConfig]);
