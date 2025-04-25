@@ -13,7 +13,7 @@ const Preview = ({ body, contentType }) => {
   if (isSvg) {
     return (
       <div style={{ marginTop: '10px', textAlign: 'center' }}>
-        {body}
+        dangerouslySetInnerHTML={{ __html: body }}
       </div>
     );
   }
