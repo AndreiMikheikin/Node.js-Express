@@ -6,7 +6,7 @@ const Preview = ({ body, contentType }) => {
   const isImage = contentType.startsWith('image/') || body.startsWith('data:image');
   const isSvg = contentType.includes('svg+xml') || body.trim().startsWith('<svg');
 
-  if (isImage) {
+  if (isImage && !isSvg) {
     return <img src={body} alt="Превью изображения" style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }} />;
   }
 
