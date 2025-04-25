@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const RequestForm = ({ onSendRequest, onSelect, selectedConfig }) => {
+const RequestForm = ({ onSendRequest, selectedConfig }) => {
   const [url, setUrl] = useState('');
   const [method, setMethod] = useState('GET');
   const [headers, setHeaders] = useState([{ key: '', value: '' }]);
   const [body, setBody] = useState('');
 
+  // Единый эффект для обновления формы при изменении selectedConfig
   useEffect(() => {
     if (selectedConfig) {
       setUrl(selectedConfig.url || '');
       setMethod(selectedConfig.method || 'GET');
-      setHeaders(selectedConfig.headers?.length ? selectedConfig.headers : [{ key: '', value: '' }]);
+      setHeaders(
+        selectedConfig.headers && Object.keys(selectedConfig.headers).length
+          ? Object.entries(selectedConfig.headers).map(([key, value]) => ({ key, value }))
+          : [{ key: '', value: '' }]
+      );
       setBody(selectedConfig.body || '');
     }
   }, [selectedConfig]);
-
-  useEffect(() => {
-    if (onSelect) {
-      setUrl(onSelect.url);
-      setMethod(onSelect.method);
-      setHeaders(onSelect.headers || []);
-      setBody(onSelect.body || '');
-    }
-  }, [onSelect]);
 
   useEffect(() => {
     if (method === 'GET' || method === 'HEAD') {
@@ -53,36 +49,44 @@ const RequestForm = ({ onSendRequest, onSelect, selectedConfig }) => {
   };
 
   const saveConfig = () => {
-    const newConfig = { url, method, headers, body };
-  
+    // Фильтрация пустых заголовков
+    const nonEmptyHeaders = headers.filter(header => header.key.trim() !== '');
+    
+    const newConfig = { 
+      url, 
+      method, 
+      headers: nonEmptyHeaders,
+      body: method !== 'GET' && method !== 'HEAD' ? body : undefined
+    };
+
     const configs = JSON.parse(localStorage.getItem('savedRequests')) || [];
-  
-    const isSameHeaders = (a, b) =>
-      a.length === b.length && a.every((h, i) => h.key === b[i].key && h.value === b[i].value);
-  
-    const existingIndex = configs.findIndex(cfg =>
+    
+    // Проверка на существование такой же конфигурации
+    const existingIndex = configs.findIndex(cfg => 
       cfg.url === newConfig.url &&
-      cfg.method === newConfig.method &&
-      isSameHeaders(cfg.headers || [], newConfig.headers || []) &&
-      (cfg.body || '') === (newConfig.body || '')
+      cfg.method === newConfig.method
     );
-  
+
     let updatedConfigs;
     if (existingIndex !== -1) {
+      // Обновляем существующую конфигурацию
       updatedConfigs = [...configs];
       updatedConfigs[existingIndex] = newConfig;
     } else {
+      // Добавляем новую конфигурацию
       updatedConfigs = [...configs, newConfig];
     }
-  
+
     localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs));
     alert('Конфигурация сохранена');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Преобразование заголовков в объект
     const headerObject = headers.reduce((acc, { key, value }) => {
-      if (key) acc[key] = value;
+      if (key.trim()) acc[key] = value;
       return acc;
     }, {});
 
@@ -175,7 +179,8 @@ const RequestForm = ({ onSendRequest, onSelect, selectedConfig }) => {
 };
 
 RequestForm.propTypes = {
-  onSendRequest: PropTypes.func.isRequired
+  onSendRequest: PropTypes.func.isRequired,
+  selectedConfig: PropTypes.object
 };
 
 export default RequestForm;

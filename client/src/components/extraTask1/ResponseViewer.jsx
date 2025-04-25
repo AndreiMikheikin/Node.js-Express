@@ -4,13 +4,31 @@ const Preview = ({ body, contentType }) => {
   if (!body || typeof body !== 'string') return null;
 
   const isImage = contentType.startsWith('image/') || body.startsWith('data:image');
-  const isHtml = contentType.includes('html') || /<[^>]+>/.test(body);
+  const isSvg = contentType.includes('svg+xml') || body.trim().startsWith('<svg');
 
   if (isImage) {
     return <img src={body} alt="Превью изображения" style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }} />;
   }
 
-  if (isHtml) {
+  if (isSvg) {
+    // Для SVG создаем data URL
+    const svgDataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(body)}`;
+    return (
+      <div style={{ marginTop: '10px' }}>
+        <img 
+          src={svgDataUrl} 
+          alt="SVG preview" 
+          style={{ maxWidth: '100%', maxHeight: '300px', border: '1px solid #eee' }}
+        />
+        <div style={{ marginTop: '5px', fontSize: '0.8em', color: '#666' }}>
+          SVG preview (размер можно изменить в стилях)
+        </div>
+      </div>
+    );
+  }
+
+  // Для HTML оставляем как было
+  if (contentType.includes('html') || /<[^>]+>/.test(body)) {
     return (
       <iframe
         srcDoc={body}
@@ -52,7 +70,7 @@ const ResponseView = ({ response }) => {
     );
   }
 
-  const { status, statusText, contentType = 'Не указан', headers = {} } = response;
+  const { status, statusText, contentType = 'text/plain', headers = {} } = response;
   const body = typeof response.body === 'object'
     ? JSON.stringify(response.body, null, 2)
     : response.body;
@@ -85,11 +103,12 @@ const ResponseView = ({ response }) => {
           background: '#f4f4f4',
           padding: '10px',
           maxHeight: '300px',
-          overflow: 'auto'
+          overflow: 'auto',
+          marginBottom: '10px'
         }}>
           {body}
         </pre>
-        <Preview body={response.body} contentType={contentType} />
+        <Preview body={body} contentType={contentType} />
       </div>
 
       <button
@@ -97,7 +116,10 @@ const ResponseView = ({ response }) => {
         style={{
           marginTop: '10px',
           padding: '5px 10px',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          backgroundColor: '#f0f0f0',
+          border: '1px solid #ccc',
+          borderRadius: '4px'
         }}
       >
         Копировать ответ
