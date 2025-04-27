@@ -100,17 +100,29 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
       headers: headers.filter(h => h.key.trim()),
       ...(method !== 'GET' && method !== 'HEAD' && { body })
     };
-
+  
     let saved = [];
     try {
       saved = JSON.parse(localStorage.getItem('savedRequests')) || [];
     } catch (e) {
       console.error('Ошибка парсинга сохранённых запросов', e);
     }
-
-    localStorage.setItem('savedRequests', JSON.stringify([...saved, config]));
+  
+    // Проверяем, есть ли уже сохранённая конфигурация с таким url и методом
+    const existingIndex = saved.findIndex(item => item.url === config.url && item.method === config.method);
+  
+    if (existingIndex !== -1) {
+      // Если нашли — обновляем
+      saved[existingIndex] = config;
+    } else {
+      // Если не нашли — добавляем
+      saved.push(config);
+    }
+  
+    localStorage.setItem('savedRequests', JSON.stringify(saved));
     alert('Конфигурация сохранена');
   };
+  
 
   return (
     <form onSubmit={handleSubmit}>
