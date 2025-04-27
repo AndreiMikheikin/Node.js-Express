@@ -40,10 +40,7 @@ const ConfigList = ({ onSelect }) => {
             }}>
               <div><strong>{config.method}</strong> {config.url}</div>
               <div>
-                <sub><strong>Заголовки:</strong> {JSON.stringify(config.headers)}</sub>
-              </div>
-              <div>
-                <sub><strong>Тело запроса:</strong> {JSON.stringify(config.body)}</sub>
+                <strong>Заголовки:</strong><code style={{maxWidth: '300px' ,}}>{JSON.stringify(config.headers)}</code>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
                 <button
