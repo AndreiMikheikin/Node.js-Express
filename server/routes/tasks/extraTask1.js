@@ -10,80 +10,76 @@ router.post('/proxy', async (req, res) => {
 
     const { url, method = 'GET', headers = {}, body } = req.body;
 
-    // 🔍 ЛОГИРУЕМ ПРИХОДЯЩИЙ ЗАПРОС (после деструктуризации!)
-    console.log('📡 Получен прокси-запрос:');
-    console.log('➡️ Метод:', method);
-    console.log('🌍 URL:', url);
-    console.log('📬 Заголовки:', headers);
-    console.log('📝 Тело:', body);
+    // Логирование
+    console.log('📡 Получен прокси-запрос:', {
+      method,
+      url,
+      headers,
+      body: body && typeof body === 'object' ? '[object]' : body
+    });
 
-    // Проверка обязательных полей
+    // Проверка URL
     if (!url || typeof url !== 'string') {
-      return res.status(400).json({ error: 'Нужен URL в формате string' });
+      return res.status(400).json({ error: 'URL должен быть строкой' });
     }
 
-    // Проверка валидности URL
-    let parsedUrl;
     try {
-      parsedUrl = new URL(url);
+      new URL(url); // Валидация URL
     } catch (e) {
-      return res.status(400).json({ error: 'Не правильный формат URL' });
+      return res.status(400).json({ error: 'Неверный формат URL' });
     }
 
-    // Базовые заголовки
-    const requestHeaders = {
-      'Accept': 'application/json',
-      ...headers
-    };
-
-    // Конфигурация запроса
+    // Подготовка запроса
     const fetchOptions = {
       method: method.toUpperCase(),
-      headers: requestHeaders,
+      headers: {
+        'Accept': 'application/json',
+        ...headers
+      },
       timeout: 10000
     };
 
-    // Добавляем тело запроса для не-GET методов
     if (body && !['GET', 'HEAD'].includes(method.toUpperCase())) {
       fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
 
-    // Выполняем запрос
+    // Выполнение запроса
     const response = await fetch(url, fetchOptions);
-    
-    // Получаем ответ
-    const responseBody = await response.text();
-    const responseHeaders = Object.fromEntries(response.headers.entries());
     const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    
-    // Обработка изображений и бинарных данных
+
+    // Обработка изображений
     if (contentType.startsWith('image/')) {
       const buffer = await response.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString('base64');
       return res.json({
         status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
         contentType,
-        body: `data:${contentType};base64,${base64}`
+        body: `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`
       });
     }
-    
-    // 🔁 ЛОГИРУЕМ ОТВЕТ
-    console.log('✅ Ответ от целевого сервера:');
-    console.log('📥 Статус:', response.status, response.statusText);
-    console.log('📦 Заголовки:', responseHeaders);
-    console.log('📄 Content-Type:', contentType);
 
-    // Отправляем ответ клиенту
+    // Обработка текстовых данных
+    const responseBody = await response.text();
+
+    // Логирование ответа
+    console.log('✅ Ответ от сервера:', {
+      status: response.status,
+      contentType,
+      body: responseBody.length > 100 ? `${responseBody.substring(0, 100)}...` : responseBody
+    });
+
+    // Отправка ответа
     res.json({
       status: response.status,
       statusText: response.statusText,
-      headers: responseHeaders,
-      contentType: contentType,
+      headers: Object.fromEntries(response.headers.entries()),
+      contentType,
       body: responseBody
     });
 
   } catch (err) {
-    console.error('❌ Ошибка при выполнении запроса:', err);
+    console.error('❌ Ошибка:', err);
     res.status(500).json({ 
       error: 'Internal server error',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined
