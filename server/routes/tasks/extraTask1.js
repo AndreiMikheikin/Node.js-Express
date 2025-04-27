@@ -47,16 +47,27 @@ router.post('/proxy', async (req, res) => {
     const response = await fetch(url, fetchOptions);
     const contentType = response.headers.get('content-type') || 'application/octet-stream';
 
-    // Обработка изображений
     if (contentType.startsWith('image/')) {
       const buffer = await response.arrayBuffer();
-      return res.json({
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        contentType,
-        body: `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`
-      });
+      
+      if (contentType === 'image/svg+xml') {
+        const svgText = Buffer.from(buffer).toString('utf8');
+        return res.json({
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          contentType,
+          body: `data:${contentType};utf8,${encodeURIComponent(svgText)}`
+        });
+      } else {
+        return res.json({
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          contentType,
+          body: `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`
+        });
+      }
     }
 
     // Обработка текстовых данных
