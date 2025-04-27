@@ -4,38 +4,20 @@ import ResponseViewer from '../../components/extraTask1/ResponseViewer';
 import ConfigList from '../../components/extraTask1/ConfigList';
 
 const ExtraTask1 = () => {
-  const [config, setConfig] = useState(null);
+  const [selectedConfig, setSelectedConfig] = useState(null);
   const [response, setResponse] = useState(null);
-  const [savedConfigs, setSavedConfigs] = useState(() => {
-    // Загружаем сохраненные конфигурации из localStorage при инициализации
-    const saved = localStorage.getItem('savedConfigs');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const handleSaveConfig = (newConfig) => {
-    const updatedConfigs = [...savedConfigs, newConfig];
-    setSavedConfigs(updatedConfigs);
-    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs)); // Сохраняем в localStorage
-  };
-
-  const handleDeleteConfig = (index) => {
-    const updatedConfigs = savedConfigs.filter((_, i) => i !== index);
-    setSavedConfigs(updatedConfigs);
-    localStorage.setItem('savedConfigs', JSON.stringify(updatedConfigs)); // Сохраняем изменения в localStorage
-  };
 
   const handleSendRequest = async (requestConfig) => {
     try {
-      const response = await fetch('http://178.250.247.67:3333/api/extraTask1/proxy', {
+      const serverResponse = await fetch('http://178.250.247.67:3333/api/extraTask1/proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestConfig), // Отправка конфигурации запроса
+        body: JSON.stringify(requestConfig),
       });
 
-      // Получаем и обрабатываем ответ от сервера
-      const responseData = await response.json();
+      const responseData = await serverResponse.json();
       setResponse({
         status: responseData.status,
         headers: responseData.headers,
@@ -47,7 +29,7 @@ const ExtraTask1 = () => {
         status: 'Error',
         headers: {},
         contentType: '',
-        body: error.message, // Обрабатываем ошибки
+        body: error.message,
       });
     }
   };
@@ -55,21 +37,16 @@ const ExtraTask1 = () => {
   return (
     <div>
       <h2>Мини Postman</h2>
-      {/* Компонент для формы запроса */}
+
       <RequestForm
+        selectedConfig={selectedConfig}
         onSendRequest={handleSendRequest}
-        onSave={handleSaveConfig}
-        selectedConfig={config}
       />
 
-      {/* Список сохраненных конфигураций */}
       <ConfigList
-        configs={savedConfigs}
-        onSelect={setConfig}
-        onDelete={handleDeleteConfig}
+        onSelectConfig={setSelectedConfig}
       />
 
-      {/* Просмотр ответа от сервера */}
       <ResponseViewer response={response} />
     </div>
   );
