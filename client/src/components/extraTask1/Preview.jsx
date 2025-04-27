@@ -1,64 +1,76 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 
 const Preview = ({ body, contentType = '' }) => {
-  if (!body || typeof body !== 'string') return null;
+  const [objectUrl, setObjectUrl] = useState(null);
 
-  const isImage = useMemo(() => (
-    contentType.startsWith('image/') || body.startsWith('data:image')
-  ), [contentType, body]);
-
-  const isSvg = useMemo(() => (
-    contentType.includes('svg+xml') || body.trim().startsWith('<svg')
-  ), [contentType, body]);
-
-  const svgUrl = useMemo(() => {
-    if (isSvg) {
-      const blob = new Blob([body], { type: 'image/svg+xml' });
-      return URL.createObjectURL(blob);
-    }
-    return null;
-  }, [body, isSvg]);
-
-  // Очистка URL.createObjectURL после размонтирования
   useEffect(() => {
     return () => {
-      if (svgUrl) {
-        URL.revokeObjectURL(svgUrl);
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [svgUrl]);
+  }, [objectUrl]);
 
-  if (isImage && !isSvg) {
-    return (
-      <img
-        src={body}
-        alt="Превью изображения"
-        style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
-      />
-    );
-  }
+  const preview = useMemo(() => {
+    if (!body) return null;
 
-  if (isSvg && svgUrl) {
-    return (
-      <img
-        src={svgUrl}
-        alt="SVG Превью"
-        style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
-      />
-    );
-  }
+    // Handle binary data cases
+    if (body instanceof Blob || body instanceof ArrayBuffer) {
+      const url = URL.createObjectURL(new Blob([body], { type: contentType }));
+      setObjectUrl(url);
+      return (
+        <img
+          src={url}
+          alt="File preview"
+          style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+        />
+      );
+    }
 
-  if (contentType.includes('html') || /<[^>]+>/.test(body)) {
-    return (
-      <iframe
-        srcDoc={body}
-        title="HTML Превью"
-        style={{ width: '100%', height: '300px', border: '1px solid #ccc', marginTop: '10px' }}
-      />
-    );
-  }
+    // Handle string-based content
+    if (typeof body === 'string') {
+      const isImage = contentType.startsWith('image/') || body.startsWith('data:image');
+      const isSvg = contentType.includes('svg+xml') || body.trim().startsWith('<svg');
+      const isHtml = contentType.includes('html') || /<[^>]+>/.test(body);
 
-  return null;
+      if (isImage && !isSvg) {
+        return (
+          <img
+            src={body}
+            alt="Image preview"
+            style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+          />
+        );
+      }
+
+      if (isSvg) {
+        const url = URL.createObjectURL(new Blob([body], { type: 'image/svg+xml' }));
+        setObjectUrl(url);
+        return (
+          <img
+            src={url}
+            alt="SVG preview"
+            style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
+          />
+        );
+      }
+
+      if (isHtml) {
+        return (
+          <iframe
+            srcDoc={body}
+            title="HTML preview"
+            style={{ width: '100%', height: '300px', border: '1px solid #ccc', marginTop: '10px' }}
+            sandbox="allow-same-origin"
+          />
+        );
+      }
+    }
+
+    return null;
+  }, [body, contentType]);
+
+  return preview;
 };
 
 export default Preview;
