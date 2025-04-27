@@ -49,16 +49,12 @@ router.post('/proxy', async (req, res) => {
           body: svgText
         });
       } else {
-        // Остальные картинки: читаем как буфер и кодируем в base64
-        const buffer = await response.buffer();
-        const base64 = buffer.toString('base64');
-
         return res.json({
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries()),
           contentType,
-          body: `data:${contentType};base64,${base64}`
+          body: `data:${contentType};base64,${Buffer.from(buffer).toString('base64')}`
         });
       }
     }
