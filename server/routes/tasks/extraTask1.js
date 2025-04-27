@@ -49,6 +49,8 @@ router.post('/proxy', async (req, res) => {
           body: svgText
         });
       } else {
+        const buffer = await response.arrayBuffer();
+
         return res.json({
           status: response.status,
           statusText: response.statusText,
