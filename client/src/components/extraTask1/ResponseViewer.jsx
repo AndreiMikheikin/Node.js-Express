@@ -16,12 +16,23 @@ const ResponseView = ({ response }) => {
       navigator.clipboard.writeText(textToCopy);
       alert('Ответ скопирован!');
     } catch (error) {
-      alert('Не удалось скопировать ответ');
       console.error('Ошибка копирования:', error);
+      alert('Не удалось скопировать ответ.');
     }
   };
 
-  if (!response) {
+  const isEmptyResponse = !response;
+
+  const { status = '', statusText = '', contentType = 'text/plain', headers = {}, body: rawBody } = response || {};
+
+  const body = useMemo(() => {
+    if (typeof rawBody === 'object') {
+      return JSON.stringify(rawBody, null, 2);
+    }
+    return rawBody || '';
+  }, [rawBody]);
+
+  if (isEmptyResponse) {
     return (
       <div>
         <h2>Ответ</h2>
@@ -29,11 +40,6 @@ const ResponseView = ({ response }) => {
       </div>
     );
   }
-
-  const { status, statusText, contentType = 'text/plain', headers = {} } = response;
-  const body = typeof response.body === 'object'
-    ? JSON.stringify(response.body, null, 2)
-    : response.body;
 
   return (
     <div>
@@ -47,27 +53,33 @@ const ResponseView = ({ response }) => {
         {Object.keys(headers).length > 0 ? (
           <ul>
             {Object.entries(headers).map(([key, value]) => (
-              <li key={key}><strong>{key}:</strong> {Array.isArray(value) ? value.join(', ') : value}</li>
+              <li key={key}>
+                <strong>{key}:</strong> {Array.isArray(value) ? value.join(', ') : value}
+              </li>
             ))}
           </ul>
         ) : (
-          <p>Заголовки отсутствуют</p>
+          <p>Заголовки отсутствуют.</p>
         )}
       </div>
 
       <div>
         <strong>Тело ответа:</strong>
-        <pre style={{
-          whiteSpace: 'pre-wrap',
-          wordWrap: 'break-word',
-          background: '#f4f4f4',
-          padding: '10px',
-          maxHeight: '300px',
-          overflow: 'auto',
-          marginBottom: '10px'
-        }}>
-          {body}
-        </pre>
+        {body ? (
+          <pre style={{
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            background: '#f4f4f4',
+            padding: '10px',
+            maxHeight: '300px',
+            overflow: 'auto',
+            marginBottom: '10px'
+          }}>
+            {body}
+          </pre>
+        ) : (
+          <p>Тело ответа пустое.</p>
+        )}
         <Preview body={body} contentType={contentType} />
       </div>
 

@@ -4,29 +4,30 @@ import ResponseViewer from '../../components/extraTask1/ResponseViewer';
 import ConfigList from '../../components/extraTask1/ConfigList';
 
 const ExtraTask1 = () => {
-  const [selectedConfig, setSelectedConfig] = useState(null);
+  const [config, setConfig] = useState(null);
   const [response, setResponse] = useState(null);
 
   const handleSendRequest = async (requestConfig) => {
     try {
-      const serverResponse = await fetch('http://178.250.247.67:3333/api/extraTask1/proxy', {
+      const res = await fetch('http://178.250.247.67:3333/api/extraTask1/proxy', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestConfig),
       });
 
-      const responseData = await serverResponse.json();
+      const responseData = await res.json();
+
       setResponse({
         status: responseData.status,
-        headers: responseData.headers,
-        contentType: responseData.contentType,
+        statusText: responseData.statusText || '', // вдруг понадобится
+        headers: responseData.headers || {},
+        contentType: responseData.contentType || '',
         body: responseData.body,
       });
     } catch (error) {
       setResponse({
         status: 'Error',
+        statusText: '',
         headers: {},
         contentType: '',
         body: error.message,
@@ -35,19 +36,21 @@ const ExtraTask1 = () => {
   };
 
   return (
-    <div>
-      <h2>Мини Postman</h2>
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1 style={{ marginBottom: '20px' }}>Мини-Postman 🚀</h1>
 
-      <RequestForm
-        selectedConfig={selectedConfig}
-        onSendRequest={handleSendRequest}
-      />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+        {/* Левая колонка: форма и список конфигов */}
+        <div>
+          <RequestForm onSendRequest={handleSendRequest} selectedConfig={config} />
+          <ConfigList onSelect={setConfig} />
+        </div>
 
-      <ConfigList
-        onSelectConfig={setSelectedConfig}
-      />
-
-      <ResponseViewer response={response} />
+        {/* Правая колонка: ответ сервера */}
+        <div>
+          <ResponseViewer response={response} />
+        </div>
+      </div>
     </div>
   );
 };

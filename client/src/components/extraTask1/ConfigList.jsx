@@ -5,7 +5,7 @@ const ConfigList = ({ onSelect }) => {
 
   useEffect(() => {
     const storedConfigs = JSON.parse(localStorage.getItem('savedRequests')) || [];
-    setConfigs(storedConfigs);
+    setConfigs(Array.isArray(storedConfigs) ? storedConfigs : []);
   }, []);
 
   const handleDelete = (index) => {
@@ -15,7 +15,9 @@ const ConfigList = ({ onSelect }) => {
   };
 
   const handleSelect = (config) => {
-    onSelect(config);
+    if (onSelect) {
+      onSelect(config);
+    }
   };
 
   return (
@@ -24,13 +26,52 @@ const ConfigList = ({ onSelect }) => {
       {configs.length === 0 ? (
         <p>Конфигурации пока не добавлены.</p>
       ) : (
-        <ul>
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
           {configs.map((config, index) => (
-            <li key={index}>
-            <button onClick={() => handleSelect(config)}>Выбрать</button>
-            <button onClick={() => handleDelete(index)}>Удалить</button>
-            <strong>{config.method}</strong> {config.url} <sub>{JSON.stringify(config.headers)}</sub> <sub>{JSON.stringify(config.body)}</sub>
-          </li>
+            <li key={index} style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px',
+              marginBottom: '15px',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              backgroundColor: '#f9f9f9'
+            }}>
+              <div><strong>{config.method}</strong> {config.url}</div>
+              <div>
+                <sub><strong>Заголовки:</strong> {JSON.stringify(config.headers)}</sub>
+              </div>
+              <div>
+                <sub><strong>Тело запроса:</strong> {JSON.stringify(config.body)}</sub>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                <button
+                  onClick={() => handleSelect(config)}
+                  style={{
+                    padding: '5px 10px',
+                    cursor: 'pointer',
+                    backgroundColor: '#e0f7fa',
+                    border: '1px solid #00acc1',
+                    borderRadius: '4px'
+                  }}
+                >
+                  Выбрать
+                </button>
+                <button
+                  onClick={() => handleDelete(index)}
+                  style={{
+                    padding: '5px 10px',
+                    cursor: 'pointer',
+                    backgroundColor: '#ffebee',
+                    border: '1px solid #e53935',
+                    borderRadius: '4px'
+                  }}
+                >
+                  Удалить
+                </button>
+              </div>
+            </li>
           ))}
         </ul>
       )}

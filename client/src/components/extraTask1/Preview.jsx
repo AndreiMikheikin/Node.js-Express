@@ -1,12 +1,16 @@
-import React, {useMemo} from "react";
+import React, { useMemo, useEffect } from "react";
 
-const Preview = ({ body, contentType }) => {
+const Preview = ({ body, contentType = '' }) => {
   if (!body || typeof body !== 'string') return null;
 
-  const isImage = contentType.startsWith('image/') || body.startsWith('data:image');
-  const isSvg = contentType.includes('svg+xml') || body.trim().startsWith('<svg');
+  const isImage = useMemo(() => (
+    contentType.startsWith('image/') || body.startsWith('data:image')
+  ), [contentType, body]);
 
-  // SVG через объект Blob
+  const isSvg = useMemo(() => (
+    contentType.includes('svg+xml') || body.trim().startsWith('<svg')
+  ), [contentType, body]);
+
   const svgUrl = useMemo(() => {
     if (isSvg) {
       const blob = new Blob([body], { type: 'image/svg+xml' });
@@ -14,6 +18,15 @@ const Preview = ({ body, contentType }) => {
     }
     return null;
   }, [body, isSvg]);
+
+  // Очистка URL.createObjectURL после размонтирования
+  useEffect(() => {
+    return () => {
+      if (svgUrl) {
+        URL.revokeObjectURL(svgUrl);
+      }
+    };
+  }, [svgUrl]);
 
   if (isImage && !isSvg) {
     return (
