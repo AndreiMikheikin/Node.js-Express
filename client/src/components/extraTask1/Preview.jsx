@@ -37,7 +37,7 @@ const Preview = ({ body, contentType = '' }) => {
         return (
           <img
             src={body}
-            alt="Image preview"
+            alt="Image Превью"
             style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
           />
         );
@@ -49,7 +49,7 @@ const Preview = ({ body, contentType = '' }) => {
         return (
           <img
             src={url}
-            alt="SVG preview"
+            alt="SVG Превью"
             style={{ maxWidth: '100%', maxHeight: '300px', marginTop: '10px' }}
           />
         );
@@ -59,7 +59,7 @@ const Preview = ({ body, contentType = '' }) => {
         return (
           <iframe
             srcDoc={body}
-            title="HTML preview"
+            title="HTML Превью"
             style={{ width: '100%', height: '300px', border: '1px solid #ccc', marginTop: '10px' }}
             sandbox="allow-same-origin"
           />

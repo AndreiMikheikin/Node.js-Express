@@ -71,7 +71,7 @@ const ResponseView = ({ response }) => {
             wordWrap: 'break-word',
             background: '#f4f4f4',
             padding: '10px',
-            maxHeight: '300px',
+            maxHeight: '900px',
             overflow: 'auto',
             marginBottom: '10px'
           }}>

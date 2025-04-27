@@ -37,11 +37,11 @@ const ExtraTask1 = () => {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '20px' }}>Мини-Postman 🚀</h1>
+      <h1 style={{ marginBottom: '20px' }}>Мини-Postman</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+      <div style={{ display: 'flex', flexWrap: 'no-wrap', gap: '30px' }}>
         {/* Левая колонка: форма и список конфигов */}
-        <div>
+        <div style={{width: '50%', minWidth: '400px'}}>
           <RequestForm onSendRequest={handleSendRequest} selectedConfig={config} />
           <ConfigList onSelect={setConfig} />
         </div>

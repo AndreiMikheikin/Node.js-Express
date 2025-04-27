@@ -55,7 +55,18 @@ router.post('/proxy', async (req, res) => {
     const responseBody = await response.text();
     const responseHeaders = Object.fromEntries(response.headers.entries());
     const contentType = response.headers.get('content-type') || 'application/octet-stream';
-
+    
+    // Обработка изображений и бинарных данных
+    if (contentType.startsWith('image/')) {
+      const buffer = await response.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      return res.json({
+        status: response.status,
+        contentType,
+        body: `data:${contentType};base64,${base64}`
+      });
+    }
+    
     // 🔁 ЛОГИРУЕМ ОТВЕТ
     console.log('✅ Ответ от целевого сервера:');
     console.log('📥 Статус:', response.status, response.statusText);
