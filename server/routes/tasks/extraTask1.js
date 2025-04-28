@@ -26,7 +26,8 @@ router.post('/proxy', async (req, res) => {
       headers: {
         'Accept': 'application/json',
         ...headers
-      }
+      },
+      redirect: 'manual'
     };
 
     if (body && !['GET', 'HEAD'].includes(method.toUpperCase())) {
