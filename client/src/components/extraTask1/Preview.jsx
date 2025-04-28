@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ResSVG from './ResSVG';
+import '../styles/Preview.scss';
 
 const Preview = ({ body, contentType = '' }) => {
   const [objectUrl, setObjectUrl] = useState(null);
@@ -48,14 +49,7 @@ const Preview = ({ body, contentType = '' }) => {
       <img
         src={objectUrl || body}
         alt="Image Preview"
-        style={{
-          display: 'block',
-          maxWidth: '100%',
-          maxHeight: '300px',
-          marginTop: '10px',
-          borderRadius: '8px',
-          objectFit: 'contain',
-        }}
+        className="aam_preview__image"
       />
     );
   }
@@ -65,31 +59,14 @@ const Preview = ({ body, contentType = '' }) => {
       <iframe
         srcDoc={body}
         title="HTML Preview"
-        style={{
-          width: '100%',
-          height: '300px',
-          border: '1px solid #ccc',
-          marginTop: '10px',
-          borderRadius: '8px',
-        }}
+        className="aam_preview__iframe"
         sandbox="allow-scripts"
       />
     );
   }
 
   return (
-    <pre
-      style={{
-        width: '100%',
-        maxHeight: '300px',
-        overflow: 'auto',
-        backgroundColor: '#f8f8f8',
-        padding: '10px',
-        borderRadius: '8px',
-        marginTop: '10px',
-        border: '1px solid #ccc',
-      }}
-    >
+    <pre className="aam_preview__pre">
       {typeof body === 'string' ? body : '[Неизвестный формат данных]'}
     </pre>
   );

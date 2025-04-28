@@ -1,0 +1,85 @@
+.aam_config-list {
+    &__title {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+  
+    &__empty {
+      font-size: 16px;
+      color: #666;
+    }
+  
+    &__items {
+      list-style-type: none;
+      padding: 0;
+    }
+  
+    &__item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+  
+    &__method-url {
+      font-weight: bold;
+    }
+  
+    &__headers,
+    &__body {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+  
+      strong {
+        margin-bottom: 2px;
+      }
+    }
+  
+    &__code {
+      max-width: 300px;
+      word-wrap: break-word;
+      background-color: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  
+    &__buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+  
+    &__button {
+      padding: 5px 10px;
+      cursor: pointer;
+      border: 1px solid;
+      border-radius: 4px;
+      background-color: #f0f0f0;
+      transition: background-color 0.3s;
+  
+      &--select {
+        background-color: #e0f7fa;
+        border-color: #00acc1;
+  
+        &:hover {
+          background-color: #b2ebf2;
+        }
+      }
+  
+      &--delete {
+        background-color: #ffebee;
+        border-color: #e53935;
+  
+        &:hover {
+          background-color: #ffcdd2;
+        }
+      }
+    }
+  }  

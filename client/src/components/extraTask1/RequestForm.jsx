@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import '../styles/RequestForm.scss';
 
 const RequestForm = ({ onSendRequest, selectedConfig }) => {
   const [url, setUrl] = useState('');
@@ -125,11 +126,11 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
   
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Настройка запроса</h2>
-
-      <div className="form-group">
-        <label>URL:</label>
+    <form onSubmit={handleSubmit} className="aam_request-form">
+      <h2 className="aam_form-title">Настройка запроса</h2>
+  
+      <div className="aam_form-group">
+        <label className="aam_label">URL:</label>
         <input
           type="text"
           value={url}
@@ -138,49 +139,63 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
             setErrors(prev => ({ ...prev, url: '' }));
           }}
           placeholder="https://example.com/api"
-          className={errors.url ? 'error' : ''}
+          className={`aam_input ${errors.url ? 'aam_input-error' : ''}`}
         />
-        {errors.url && <div className="error-message">{errors.url}</div>}
+        {errors.url && <div className="aam_error-message">{errors.url}</div>}
       </div>
-
-      <div className="form-group">
-        <label>Метод:</label>
-        <select value={method} onChange={(e) => setMethod(e.target.value)}>
+  
+      <div className="aam_form-group">
+        <label className="aam_label">Метод:</label>
+        <select
+          value={method}
+          onChange={(e) => setMethod(e.target.value)}
+          className="aam_select"
+        >
           {['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD'].map(m => (
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
       </div>
-
-      <div className="form-group">
-        <label>Заголовки:</label>
+  
+      <div className="aam_form-group">
+        <label className="aam_label">Заголовки:</label>
         {headers.map((header, index) => (
-          <div key={index} className="header-row">
+          <div key={index} className="aam_header-row">
             <input
               type="text"
               value={header.key}
               onChange={(e) => handleHeaderChange(index, 'key', e.target.value)}
               placeholder="Ключ"
+              className="aam_input"
             />
             <input
               type="text"
               value={header.value}
               onChange={(e) => handleHeaderChange(index, 'value', e.target.value)}
               placeholder="Значение"
+              className="aam_input"
             />
-            <button type="button" onClick={() => removeHeader(index)}>
+            <button
+              type="button"
+              onClick={() => removeHeader(index)}
+              className="aam_button-remove"
+            >
               ×
             </button>
           </div>
         ))}
-        <button type="button" onClick={addHeader}>
+        <button
+          type="button"
+          onClick={addHeader}
+          className="aam_button-add"
+        >
           + Добавить заголовок
         </button>
       </div>
-
+  
       {(method !== 'GET' && method !== 'HEAD') && (
-        <div className="form-group">
-          <label>Тело запроса:</label>
+        <div className="aam_form-group">
+          <label className="aam_label">Тело запроса:</label>
           <textarea
             value={body}
             onChange={(e) => {
@@ -189,18 +204,20 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
             }}
             placeholder="Введите JSON или текст"
             rows={5}
+            className={`aam_textarea ${errors.body ? 'aam_input-error' : ''}`}
           />
-          {errors.body && <div className="error-message">{errors.body}</div>}
+          {errors.body && <div className="aam_error-message">{errors.body}</div>}
         </div>
       )}
-
-      <div className="form-actions">
-        <button type="submit">Отправить запрос</button>
-        <button type="button" onClick={clearForm}>Очистить</button>
-        <button type="button" onClick={saveConfig}>Сохранить</button>
+  
+      <div className="aam_form-actions">
+        <button type="submit" className="aam_button-primary">Отправить запрос</button>
+        <button type="button" onClick={clearForm} className="aam_button-secondary">Очистить</button>
+        <button type="button" onClick={saveConfig} className="aam_button-secondary">Сохранить</button>
       </div>
     </form>
   );
+  
 };
 
 RequestForm.propTypes = {

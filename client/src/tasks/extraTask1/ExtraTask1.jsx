@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import RequestForm from '../../components/extraTask1/RequestForm';
 import ResponseViewer from '../../components/extraTask1/ResponseViewer';
 import ConfigList from '../../components/extraTask1/ConfigList';
+import '../../styles/ExtraTask1.scss';
 
 const ExtraTask1 = () => {
   const [config, setConfig] = useState(null);
@@ -36,18 +37,18 @@ const ExtraTask1 = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: '20px' }}>Мини-Postman</h1>
+    <div className="aam_extra-task1">
+      <h1 className="aam_extra-task1__title">Мини-Postman</h1>
 
-      <div style={{ display: 'flex', flexWrap: 'no-wrap', gap: '30px' }}>
+      <div className="aam_extra-task1__content">
         {/* Левая колонка: форма и список конфигов */}
-        <div style={{width: '50%', minWidth: '400px'}}>
+        <div className="aam_extra-task1__left-column">
           <RequestForm onSendRequest={handleSendRequest} selectedConfig={config} />
           <ConfigList onSelect={setConfig} />
         </div>
 
         {/* Правая колонка: ответ сервера */}
-        <div>
+        <div className="aam_extra-task1__right-column">
           <ResponseViewer response={response} />
         </div>
       </div>

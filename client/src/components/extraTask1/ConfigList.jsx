@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../styles/ConfigList.scss';
 
 const ConfigList = ({ onSelect }) => {
   const [configs, setConfigs] = useState([]);
@@ -21,52 +22,35 @@ const ConfigList = ({ onSelect }) => {
   };
 
   return (
-    <div>
-      <h2>Сохранённые конфигурации</h2>
+    <div className="aam_config-list">
+      <h2 className="aam_config-list__title">Сохранённые конфигурации</h2>
       {configs.length === 0 ? (
-        <p>Конфигурации пока не добавлены.</p>
+        <p className="aam_config-list__empty">Конфигурации пока не добавлены.</p>
       ) : (
-        <ul style={{ listStyleType: 'none', padding: 0 }}>
+        <ul className="aam_config-list__items">
           {configs.map((config, index) => (
-            <li key={index} style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '5px',
-              marginBottom: '15px',
-              padding: '10px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              backgroundColor: '#f9f9f9'
-            }}>
-              <div><strong>{config.method}</strong> {config.url}</div>
-              <div>
-                <strong>Заголовки:</strong><code style={{maxWidth: '300px'}}>{JSON.stringify(config.headers)}</code>
+            <li key={index} className="aam_config-list__item">
+              <div className="aam_config-list__method-url">
+                <strong>{config.method}</strong> {config.url}
               </div>
-              <div>
-                <strong>Тело запроса:</strong> <code style={{maxWidth: '300px'}}>{JSON.stringify(config.body)}</code>
+              <div className="aam_config-list__headers">
+                <strong>Заголовки:</strong>
+                <code className="aam_config-list__code">{JSON.stringify(config.headers)}</code>
               </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+              <div className="aam_config-list__body">
+                <strong>Тело запроса:</strong>
+                <code className="aam_config-list__code">{JSON.stringify(config.body)}</code>
+              </div>
+              <div className="aam_config-list__buttons">
                 <button
                   onClick={() => handleSelect(config)}
-                  style={{
-                    padding: '5px 10px',
-                    cursor: 'pointer',
-                    backgroundColor: '#e0f7fa',
-                    border: '1px solid #00acc1',
-                    borderRadius: '4px'
-                  }}
+                  className="aam_config-list__button aam_config-list__button--select"
                 >
                   Выбрать
                 </button>
                 <button
                   onClick={() => handleDelete(index)}
-                  style={{
-                    padding: '5px 10px',
-                    cursor: 'pointer',
-                    backgroundColor: '#ffebee',
-                    border: '1px solid #e53935',
-                    borderRadius: '4px'
-                  }}
+                  className="aam_config-list__button aam_config-list__button--delete"
                 >
                   Удалить
                 </button>

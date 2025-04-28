@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import Preview from './Preview';
+import '../styles/ResponseViewer.scss';
 
 const ResponseView = ({ response }) => {
   const copyToClipboard = () => {
@@ -32,68 +33,43 @@ const ResponseView = ({ response }) => {
     return rawBody || '';
   }, [rawBody]);
 
-  if (isEmptyResponse) {
-    return (
-      <div>
-        <h2>Ответ</h2>
-        <p>Ответ ещё не получен.</p>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <h2>Ответ от сервера</h2>
+    <div className="aam_response">
+      <h2 className="aam_response__title">Ответ от сервера</h2>
 
-      <div><strong>HTTP-статус:</strong> {status} {statusText}</div>
-      <div><strong>Content-Type:</strong> {contentType}</div>
+      <div className="aam_response__field"><strong>HTTP-статус:</strong> {status} {statusText}</div>
+      <div className="aam_response__field"><strong>Content-Type:</strong> {contentType}</div>
 
-      <div>
+      <div className="aam_response__headers">
         <strong>Заголовки ответа:</strong>
         {Object.keys(headers).length > 0 ? (
-          <ul>
+          <ul className="aam_response__headers-list">
             {Object.entries(headers).map(([key, value]) => (
-              <li key={key}>
+              <li key={key} className="aam_response__headers-item">
                 <strong>{key}:</strong> {Array.isArray(value) ? value.join(', ') : value}
               </li>
             ))}
           </ul>
         ) : (
-          <p>Заголовки отсутствуют.</p>
+          <p className="aam_response__text">Заголовки отсутствуют.</p>
         )}
       </div>
 
-      <div>
+      <div className="aam_response__body">
         <strong>Тело ответа:</strong>
         {body ? (
-          <pre style={{
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            background: '#f4f4f4',
-            padding: '10px',
-            maxWidth: '500px',
-            maxHeight: '300px',
-            overflow: 'auto',
-            marginBottom: '10px'
-          }}>
+          <pre className="aam_response__body-pre">
             {body}
           </pre>
         ) : (
-          <p>Тело ответа пустое.</p>
+          <p className="aam_response__text">Тело ответа пустое.</p>
         )}
         <Preview body={body} contentType={contentType} />
       </div>
 
       <button
         onClick={copyToClipboard}
-        style={{
-          marginTop: '10px',
-          padding: '5px 10px',
-          cursor: 'pointer',
-          backgroundColor: '#f0f0f0',
-          border: '1px solid #ccc',
-          borderRadius: '4px'
-        }}
+        className="aam_response__copy-button"
       >
         Копировать ответ
       </button>
