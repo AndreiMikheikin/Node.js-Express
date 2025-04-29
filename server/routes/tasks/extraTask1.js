@@ -91,7 +91,7 @@ router.post('/proxy', async (req, res) => {
 });
 
 // CRUD
-const SAVED_REQUESTS_DATA_PATH = path.join(__dirname, '../data/savedRequests.json');
+const SAVED_REQUESTS_DATA_PATH = path.join(__dirname, 'data/savedRequests.json');
 
 // Create
 router.post('/saveRequest', async (req, res) => {
