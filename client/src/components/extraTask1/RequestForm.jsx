@@ -125,32 +125,24 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
   };
 
   // Обработчик для сохранения на сервер
-  const saveConfigToServer = async () => {
-    const config = {
-      url,
-      method,
-      headers: headers.filter(h => h.key.trim()),
-      ...(method !== 'GET' && method !== 'HEAD' && { body })
-    };
-
+  const saveConfigToServer = async (config) => {
     try {
-      const response = await fetch('api/extraTask1/saveRequest', {
+      const response = await fetch('http://178.250.247.67:3333/api/extraTask1/saveRequest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(config),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Ошибка при сохранении конфигурации на сервере');
+        throw new Error('Не удалось сохранить конфигурацию на сервере');
       }
-
+  
       const result = await response.json();
-      alert(`Конфигурация успешно сохранена на сервере: ${result.id}`);
+      console.log('Конфигурация успешно сохранена на сервере:', result);
     } catch (error) {
-      console.error(error);
-      alert('Ошибка при сохранении конфигурации на сервере');
+      console.error('Ошибка при сохранении конфигурации:', error);
     }
   };  
 
