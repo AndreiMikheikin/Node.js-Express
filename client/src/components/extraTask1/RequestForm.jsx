@@ -101,17 +101,17 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
       headers: headers.filter(h => h.key.trim()),
       ...(method !== 'GET' && method !== 'HEAD' && { body })
     };
-  
+
     let saved = [];
     try {
       saved = JSON.parse(localStorage.getItem('savedRequests')) || [];
     } catch (e) {
       console.error('Ошибка парсинга сохранённых запросов', e);
     }
-  
+
     // Проверяем, есть ли уже сохранённая конфигурация с таким url и методом
     const existingIndex = saved.findIndex(item => item.url === config.url && item.method === config.method);
-  
+
     if (existingIndex !== -1) {
       // Если нашли — обновляем
       saved[existingIndex] = config;
@@ -119,7 +119,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
       // Если не нашли — добавляем
       saved.push(config);
     }
-  
+
     localStorage.setItem('savedRequests', JSON.stringify(saved));
     alert('Конфигурация сохранена');
   };
@@ -134,22 +134,22 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
         },
         body: JSON.stringify(config),
       });
-  
+
       if (!response.ok) {
         throw new Error('Не удалось сохранить конфигурацию на сервере');
       }
-  
+
       const result = await response.json();
       console.log('Конфигурация успешно сохранена на сервере:', result);
     } catch (error) {
       console.error('Ошибка при сохранении конфигурации:', error);
     }
-  };  
+  };
 
   return (
     <form onSubmit={handleSubmit} className="aam_request-form">
       <h2 className="aam_form-title">Настройка запроса</h2>
-  
+
       <div className="aam_form-group">
         <label className="aam_label">URL:</label>
         <input
@@ -164,7 +164,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
         />
         {errors.url && <div className="aam_error-message">{errors.url}</div>}
       </div>
-  
+
       <div className="aam_form-group">
         <label className="aam_label">Метод:</label>
         <select
@@ -177,7 +177,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
           ))}
         </select>
       </div>
-  
+
       <div className="aam_form-group">
         <label className="aam_label">Заголовки:</label>
         {headers.map((header, index) => (
@@ -213,7 +213,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
           + Добавить заголовок
         </button>
       </div>
-  
+
       {(method !== 'GET' && method !== 'HEAD') && (
         <div className="aam_form-group">
           <label className="aam_label">Тело запроса:</label>
@@ -230,16 +230,28 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
           {errors.body && <div className="aam_error-message">{errors.body}</div>}
         </div>
       )}
-  
+
       <div className="aam_form-actions">
         <button type="submit" className="aam_button-primary">Отправить запрос</button>
         <button type="button" onClick={clearForm} className="aam_button-secondary">Очистить</button>
         <button type="button" onClick={saveConfig} className="aam_button-secondary">Сохранить</button>
-        <button type="button" onClick={saveConfigToServer} className="aam_button-secondary">Сохранить на сервер</button>
+        <button
+          type="button"
+          onClick={() => {
+            const config = {
+              url,
+              method,
+              headers: headers.filter(h => h.key.trim()),
+              ...(method !== 'GET' && method !== 'HEAD' && { body })
+            };
+            saveConfigToServer(config);
+          }}
+          className="aam_button-secondary"
+        >Сохранить на сервер</button>
       </div>
     </form>
   );
-  
+
 };
 
 RequestForm.propTypes = {
