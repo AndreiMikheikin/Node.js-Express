@@ -93,14 +93,13 @@ router.post('/proxy', async (req, res) => {
 // CRUD
 const SAVED_REQUESTS_DATA_PATH = path.join(__dirname, 'data/savedRequests.json');
 
-// Create
+// Create + Update
 router.post('/saveRequest', async (req, res) => {
-  const newRequest = req.body;
-  if (!newRequest || typeof newRequest !== 'object') {
+  const requestData = req.body;
+
+  if (!requestData || typeof requestData !== 'object') {
     return res.status(400).send('Некорректные данные');
   }
-
-  newRequest.id = Date.now();
 
   try {
     let requests = [];
@@ -111,11 +110,24 @@ router.post('/saveRequest', async (req, res) => {
       if (e.code !== 'ENOENT') throw e;
     }
 
-    requests.push(newRequest);
+    if (requestData.id) {
+      // Обновление по ID
+      const index = requests.findIndex(item => item.id === requestData.id);
+      if (index !== -1) {
+        requests[index] = requestData;
+        await fs.writeFile(SAVED_REQUESTS_DATA_PATH, JSON.stringify(requests, null, 2));
+        return res.json({ updated: true, data: requestData });
+      }
+    }
+
+    // Создание новой записи
+    requestData.id = Date.now();
+    requests.push(requestData);
     await fs.writeFile(SAVED_REQUESTS_DATA_PATH, JSON.stringify(requests, null, 2));
-    res.json(newRequest);
+    res.json({ created: true, data: requestData });
+
   } catch (err) {
-    res.status(500).send('Ошибка сохранения');
+    res.status(500).send('Ошибка при сохранении или обновлении');
   }
 });
 
@@ -134,7 +146,7 @@ router.get('/savedRequests', async (req, res) => {
 });
 
 // Update
-router.put('/updateRequest/:id', async (req, res) => {
+/* router.put('/updateRequest/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const updatedRequest = req.body;
 
@@ -159,7 +171,7 @@ router.put('/updateRequest/:id', async (req, res) => {
   } catch (err) {
     res.status(500).send('Ошибка при обновлении');
   }
-});
+}); */
 
 // Delete
 router.delete('/deleteRequest/:id', async (req, res) => {
