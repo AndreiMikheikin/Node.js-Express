@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs').promises;
 
 router.post('/proxy', async (req, res) => {
   try {
@@ -88,10 +90,11 @@ router.post('/proxy', async (req, res) => {
   }
 });
 
-// CRUD запросов ExtraTask1
-const SAVED_REQUESTS_DATA_PATH = path.join(__dirname, './data/savedRequests.json');
-//Create
-app.post('/saveRequest', async (req, res) => {
+// CRUD
+const SAVED_REQUESTS_DATA_PATH = path.join(__dirname, '../data/savedRequests.json');
+
+// Create
+router.post('/saveRequest', async (req, res) => {
   const newRequest = req.body;
   if (!newRequest || typeof newRequest !== 'object') {
     return res.status(400).send('Некорректные данные');
@@ -116,26 +119,22 @@ app.post('/saveRequest', async (req, res) => {
   }
 });
 
-//Read
-app.get('/savedRequests', (req, res) => {
-  fs.readFile(SAVED_REQUESTS_DATA_PATH, 'utf-8', (err, data) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        return res.json([]);
-      }
-      return res.status(500).send('Server error');
+// Read
+router.get('/savedRequests', async (req, res) => {
+  try {
+    const data = await fs.readFile(SAVED_REQUESTS_DATA_PATH, 'utf-8');
+    const requests = JSON.parse(data);
+    res.json(requests);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return res.json([]);
     }
-    try {
-      const requests = JSON.parse(data);
-      res.json(requests);
-    } catch (e) {
-      res.status(500).send('Invalid data format');
-    }
-  });
+    return res.status(500).send('Server error');
+  }
 });
 
 // Update
-app.put('/updateRequest/:id', async (req, res) => {
+router.put('/updateRequest/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const updatedRequest = req.body;
 
@@ -152,7 +151,7 @@ app.put('/updateRequest/:id', async (req, res) => {
       return res.status(404).send('Запись не найдена');
     }
 
-    updatedRequest.id = id; // сохраняем оригинальный ID
+    updatedRequest.id = id;
     requests[index] = updatedRequest;
 
     await fs.writeFile(SAVED_REQUESTS_DATA_PATH, JSON.stringify(requests, null, 2));
@@ -162,8 +161,8 @@ app.put('/updateRequest/:id', async (req, res) => {
   }
 });
 
-//Delete
-app.delete('/deleteRequest/:id', async (req, res) => {
+// Delete
+router.delete('/deleteRequest/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) return res.status(400).send('Некорректный ID');
 
