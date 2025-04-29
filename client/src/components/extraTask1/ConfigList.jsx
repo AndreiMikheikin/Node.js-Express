@@ -30,14 +30,32 @@ const ConfigList = ({ onSelect }) => {
     fetchConfigsFromServer(); // Загружаем данные с сервера
   }, []);
 
-  const handleDelete = (index, source) => {
+  // Удаление конфигурации с сервера
+  const handleDeleteFromServer = async (index, configId) => {
+    try {
+      const response = await fetch(`http://178.250.247.67:3333/api/extraTask1/deleteRequest/${configId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Не удалось удалить конфигурацию с сервера');
+      }
+
+      // Обновляем состояние после удаления с сервера
+      const updatedConfigs = serverConfigs.filter((_, i) => i !== index);
+      setServerConfigs(updatedConfigs);
+    } catch (error) {
+      console.error('Ошибка при удалении конфигурации с сервера:', error);
+    }
+  };
+
+  const handleDelete = (index, source, configId) => {
     if (source === 'local') {
       const updatedConfigs = localConfigs.filter((_, i) => i !== index);
       setLocalConfigs(updatedConfigs);
-      localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs)); // Обновляем локальное хранилище
+      localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs)); 
     } else if (source === 'server') {
-      const updatedConfigs = serverConfigs.filter((_, i) => i !== index);
-      setServerConfigs(updatedConfigs);
+      handleDeleteFromServer(index, configId);
     }
   };
 
