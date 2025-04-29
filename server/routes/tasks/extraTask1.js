@@ -35,7 +35,7 @@ router.post('/proxy', async (req, res) => {
     }
 
     const response = await fetch(url, fetchOptions);
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
+    const contentType = response.headers.get('content-type');
 
     if (contentType.startsWith('image/')) {
       if (contentType === 'image/svg+xml') {

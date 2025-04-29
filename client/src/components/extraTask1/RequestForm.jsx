@@ -123,7 +123,36 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
     localStorage.setItem('savedRequests', JSON.stringify(saved));
     alert('Конфигурация сохранена');
   };
-  
+
+  // Обработчик для сохранения на сервер
+  const saveConfigToServer = async () => {
+    const config = {
+      url,
+      method,
+      headers: headers.filter(h => h.key.trim()),
+      ...(method !== 'GET' && method !== 'HEAD' && { body })
+    };
+
+    try {
+      const response = await fetch('/api/requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при сохранении конфигурации на сервере');
+      }
+
+      const result = await response.json();
+      alert(`Конфигурация успешно сохранена на сервере: ${result.id}`);
+    } catch (error) {
+      console.error(error);
+      alert('Ошибка при сохранении конфигурации на сервере');
+    }
+  };  
 
   return (
     <form onSubmit={handleSubmit} className="aam_request-form">
@@ -214,6 +243,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
         <button type="submit" className="aam_button-primary">Отправить запрос</button>
         <button type="button" onClick={clearForm} className="aam_button-secondary">Очистить</button>
         <button type="button" onClick={saveConfig} className="aam_button-secondary">Сохранить</button>
+        <button type="button" onClick={saveConfigToServer} className="aam_button-secondary">Сохранить на сервер</button>
       </div>
     </form>
   );
