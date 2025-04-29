@@ -127,7 +127,8 @@ router.post('/saveRequest', async (req, res) => {
     res.json({ created: true, data: requestData });
 
   } catch (err) {
-    res.status(500).send('Ошибка при сохранении или обновлении');
+    console.error('❌ Ошибка при сохранении или обновлении:', err);
+    res.status(500).json({ error: 'Ошибка при сохранении или обновлении', details: err.message });
   }
 });
 
