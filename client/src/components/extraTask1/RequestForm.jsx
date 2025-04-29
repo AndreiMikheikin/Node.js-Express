@@ -134,7 +134,7 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
     };
 
     try {
-      const response = await fetch('/extraTask1/requests', {
+      const response = await fetch('api/extraTask1/requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
