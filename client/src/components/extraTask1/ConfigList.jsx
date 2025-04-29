@@ -99,7 +99,7 @@ const ConfigList = ({ onSelect }) => {
                     Выбрать
                   </button>
                   <button
-                    onClick={() => handleDelete(index, 'server', config._id)}
+                    onClick={() => handleDelete(index, 'server', config.id)}
                     className="aam_config-list__button aam_config-list__button--delete"
                   >
                     Удалить
