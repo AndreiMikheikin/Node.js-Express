@@ -4,7 +4,8 @@ on:
   push:
     branches: [ master ]
     paths:
-      - 'mini-postman/**'
+      - 'mini-postman/client/**'
+      - 'mini-postman/server/**'
 
 jobs:
   deploy:
@@ -19,7 +20,7 @@ jobs:
         node-version: 18
         cache: 'npm'
 
-    - name: Build Mini Postman client
+    - name: Build React app (Mini Postman)
       run: |
         cd mini-postman/client
         npm install
@@ -30,10 +31,10 @@ jobs:
     - name: Prepare deployment artifacts
       run: |
         rm -rf deployment
-        mkdir -p deployment/mini-postman
-        cp -r mini-postman/client/dist deployment/mini-postman/
-        cp -r mini-postman/server deployment/mini-postman/
-        rm -rf deployment/mini-postman/server/node_modules
+        mkdir deployment
+        cp -r mini-postman/client/dist deployment/
+        cp -r mini-postman/server deployment/
+        rm -rf deployment/server/node_modules
 
     - name: Validate SSH Key
       run: |
@@ -58,26 +59,27 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          echo "Successfully connected to server"
+          echo "Connected to:"
           uname -a
+          echo "Disk space:"
           df -h
         timeout: 30s
 
-    - name: Deploy Mini Postman via SCP
+    - name: Deploy via SCP (Mini Postman)
       uses: appleboy/scp-action@v0.1.5
       with:
         host: 178.250.247.67
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
-        source: "deployment/mini-postman/"
+        source: "deployment/"
         target: "/root/mini-postman"
         rm: true
         overwrite: true
         strip_components: 1
         timeout: 2m
 
-    - name: Install deps and restart Mini Postman
+    - name: Install dependencies and restart mini-postman server
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: 178.250.247.67

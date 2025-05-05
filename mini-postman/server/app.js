@@ -63,7 +63,7 @@ app.delete('/api/configs/:index', async (req, res) => {
 // Статический файл для фронта
 app.use(express.static(path.join(__dirname, '../client/dist/')));
 
-// Фоллбэк для React 
+// Фоллбэк для React
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
