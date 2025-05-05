@@ -61,11 +61,11 @@ app.delete('/api/configs/:index', async (req, res) => {
 });
 
 // Статический файл для фронта
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../client/')));
 
 // Фоллбэк для React (если путь не найден среди вышеуказанных)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
 app.listen(PORT, () => {
