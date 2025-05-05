@@ -14,14 +14,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 1. Установка Node.js
+    # 1. Установка Node.js (если требуется для сервера)
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
         cache: 'npm'
 
-    # 2. Сборка клиента
+    # 2. Подготовка клиентской части (сборка)
     - name: Build Client
       run: |
         cd mini-postman/client
@@ -30,29 +30,22 @@ jobs:
       env:
         VITE_API_BASE_URL: /api/mini-postman
 
-    # 3. Подготовка сервера
+    # 3. Подготовка серверной части (установка зависимостей)
     - name: Prepare Server
       run: |
         cd mini-postman/server
         npm ci --omit=dev
-        cp .env.production .env || echo ".env.production not found"
 
     # 4. Создание структуры для деплоя
     - name: Create Deployment Structure
       run: |
+        # Создаём временную структуру для деплоя
         mkdir -p deployment
-        # Создаем полную структуру папок
-        mkdir -p deployment/client
-        mkdir -p deployment/server
-        
-        # Копируем только нужные файлы
-        cp -r mini-postman/client/dist/* deployment/client/
-        cp -r mini-postman/server/* deployment/server/
-        
-        # Очищаем от ненужного
-        rm -rf deployment/server/node_modules
+        # Копируем клиентскую сборку (dist) и серверные файлы
+        cp -r mini-postman/client/dist/* deployment/
+        cp -r mini-postman/server/* deployment/
 
-    # 5. Деплой файлов
+    # 5. Деплой файлов на сервер
     - name: Deploy Files
       uses: appleboy/scp-action@v0.1.5
       with:
@@ -60,80 +53,9 @@ jobs:
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
-        source: "deployment/"
+        source: "deployment/*"
         target: "/root/mini-postman/"
         rm: true
         overwrite: true
 
-    # 6. Настройка сервера (с проверками)
-    - name: Setup Server Environment
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: 178.250.247.67
-        username: root
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        script: |
-          # 1. Проверяем и создаем структуру папок
-          echo "Creating directory structure..."
-          mkdir -p /root/mini-postman
-          mkdir -p /etc/nginx/conf.d
-          
-          # 2. Проверяем установку Node.js и npm
-          if ! command -v node &> /dev/null; then
-            echo "Installing Node.js..."
-            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-          fi
-          
-          # 3. Проверяем установку PM2
-          if ! command -v pm2 &> /dev/null; then
-            echo "Installing PM2..."
-            sudo npm install -g pm2
-          fi
-          
-          # 4. Проверяем установку Nginx
-          if ! command -v nginx &> /dev/null; then
-            echo "Installing Nginx..."
-            sudo apt update
-            sudo apt install -y nginx
-          fi
-          
-          # 5. Устанавливаем зависимости
-          echo "Installing dependencies..."
-          cd /root/mini-postman/server
-          npm install --omit=dev
-          
-          # 6. Настраиваем PM2
-          echo "Setting up PM2..."
-          pm2 delete mini-postman || true
-          pm2 start /root/mini-postman/server/app.js --name "mini-postman"
-          pm2 save
-          pm2 startup
-          
-          # 7. Настраиваем Nginx
-          echo "Configuring Nginx..."
-          sudo bash -c 'cat > /etc/nginx/conf.d/mini-postman.conf <<EOF
-          server {
-              listen 80;
-              server_name 178.250.247.67;
-              
-              location /mini-postman {
-                  alias /root/mini-postman/client;
-                  try_files \$uri /index.html;
-                  index index.html;
-              }
-              
-              location /api/mini-postman {
-                  proxy_pass http://localhost:3334;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-              }
-          }
-          EOF'
-          
-          # 8. Проверяем и перезапускаем Nginx
-          sudo nginx -t
-          sudo systemctl restart nginx
-          
-          echo "Deployment completed successfully!"
+    # 6. Завершающие действия (перезапуск сервера или дополнительных сервисов не требуется)
