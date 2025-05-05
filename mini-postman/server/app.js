@@ -61,13 +61,13 @@ app.delete('/api/configs/:index', async (req, res) => {
 });
 
 // Статический файл для фронта
-app.use(express.static(path.join(__dirname, '../client/')));
+app.use(express.static(path.join(__dirname, '../client/dist/')));
 
 // Фоллбэк для React (если путь не найден среди вышеуказанных)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running at: http://localhost:${PORT}`);
+  console.log(`Server is running at: http://178.250.247.67/:${PORT}`);
 });

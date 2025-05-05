@@ -14,14 +14,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 1. Установка Node.js (если требуется для сервера)
+    # 1. Установка Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18
         cache: 'npm'
 
-    # 2. Подготовка клиентской части (сборка)
+    # 2. Сборка клиентской части
     - name: Build Client
       run: |
         cd mini-postman/client
@@ -30,7 +30,7 @@ jobs:
       env:
         VITE_API_BASE_URL: /api/mini-postman
 
-    # 3. Подготовка серверной части (установка зависимостей)
+    # 3. Установка зависимостей для сервера
     - name: Prepare Server
       run: |
         cd mini-postman/server
@@ -39,11 +39,11 @@ jobs:
     # 4. Создание структуры для деплоя
     - name: Create Deployment Structure
       run: |
-        # Создаём временную структуру для деплоя
-        mkdir -p deployment
-        # Копируем клиентскую сборку (dist) и серверные файлы
-        cp -r mini-postman/client/dist/* deployment/
-        cp -r mini-postman/server/* deployment/
+        # Создаём папку mini-postman на сервере
+        mkdir -p deployment/mini-postman
+        # Копируем клиентскую сборку (dist) и серверные файлы в нужные директории
+        cp -r mini-postman/client/dist deployment/mini-postman/dist
+        cp -r mini-postman/server deployment/mini-postman/server
 
     # 5. Деплой файлов на сервер
     - name: Deploy Files
@@ -53,9 +53,9 @@ jobs:
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
-        source: "deployment/*"
+        source: "deployment/mini-postman/*"
         target: "/root/mini-postman/"
         rm: true
         overwrite: true
 
-    # 6. Завершающие действия (перезапуск сервера или дополнительных сервисов не требуется)
+    # 6. Завершающие действия (перезапуск серверных процессов, если нужно)
