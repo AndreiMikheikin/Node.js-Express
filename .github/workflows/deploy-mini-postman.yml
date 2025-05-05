@@ -3,6 +3,9 @@ name: Deploy Mini-Postman
 on:
   push:
     branches: [master]
+    paths:
+      - 'mini-postman/client/**'
+      - 'mini-postman/server/**'
 
 jobs:
   deploy:

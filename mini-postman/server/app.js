@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3334;
 
 // Пути к файлам
-const DATA_PATH = path.join(__dirname, process.env.DATA_FILE_PATH);
+const DATA_PATH = path.join(__dirname, 'data', 'savedRequests.json');
 
 //
 const postmanRoutes = require('./routes/postman');
