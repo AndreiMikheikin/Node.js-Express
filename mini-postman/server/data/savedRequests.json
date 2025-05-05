@@ -1,0 +1,13 @@
+[
+  {
+    "url": "https://www.mts.by",
+    "method": "GET",
+    "headers": [
+      {
+        "key": "Content-Type",
+        "value": "text/html"
+      }
+    ],
+    "id": 1746430819634
+  }
+]

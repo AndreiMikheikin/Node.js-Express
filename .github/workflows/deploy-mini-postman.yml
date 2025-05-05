@@ -1,0 +1,107 @@
+name: Deploy Mini-Postman
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'mini-postman/**'
+      
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Шаг 1. Получение кода
+      - uses: actions/checkout@v4
+
+      # Шаг 2. Установка Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      # Шаг 3. Сборка клиента (если есть React)
+      - name: Build Client
+        run: |
+          cd client
+          npm ci
+          npm run build
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
+          REACT_APP_API_URL: http://178.250.247.67/api/mini-postman
+
+      # Шаг 4. Установка серверных зависимостей
+      - name: Install Server Dependencies
+        run: |
+          cd server
+          npm ci --production
+
+      # Шаг 5. Подготовка артефактов
+      - name: Prepare Artifacts
+        run: |
+          mkdir -p deployment
+          # Копируем только нужные файлы
+          cp -r client/build deployment/client
+          cp -r server deployment/
+          cp server/.env.production deployment/server/.env
+          rm -rf deployment/server/node_modules
+
+      # Шаг 6. Настройка SSH
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 178.250.247.67 >> ~/.ssh/known_hosts
+
+      # Шаг 7. Деплой в изолированную папку
+      - name: Deploy to Server
+        uses: appleboy/scp-action@v0.1.5
+        with:
+          host: 178.250.247.67
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "deployment/"
+          target: "/var/www/mini-postman"  # Изолированная папка
+          rm: true
+          overwrite: true
+
+      # Шаг 8. Запуск через PM2 (с уникальным именем)
+      - name: Start Mini-Postman
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 178.250.247.67
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /var/www/mini-postman/server
+            npm install --production
+            
+            # Уникальное имя процесса
+            pm2 delete mini-postman || true
+            pm2 start app.js --name "mini-postman" --update-env
+            pm2 save
+            
+            # Настройка Nginx только для Mini-Postman
+            sudo bash -c 'cat > /etc/nginx/sites-available/mini-postman.conf <<EOF
+            server {
+                listen 80;
+                server_name 178.250.247.67;
+
+                location /mini-postman {
+                    alias /var/www/mini-postman/client;
+                    try_files \$uri /index.html;
+                }
+
+                location /api/mini-postman {
+                    proxy_pass http://localhost:3334;
+                    proxy_set_header Host \$host;
+                }
+            }
+            EOF'
+            
+            sudo ln -sf /etc/nginx/sites-available/mini-postman.conf /etc/nginx/sites-enabled/
+            sudo nginx -t && sudo systemctl restart nginx

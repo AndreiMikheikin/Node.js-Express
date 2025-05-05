@@ -3,6 +3,9 @@ name: Deploy Node.js + React App
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'client/**'
+      - 'server/**'
 
 jobs:
   deploy:
