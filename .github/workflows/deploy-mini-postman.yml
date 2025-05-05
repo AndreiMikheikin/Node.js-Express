@@ -13,7 +13,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Шаг 1. Сборка клиента (Vite)
+    # 1. Установка Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    # 2. Сборка клиента
     - name: Build Client
       run: |
         cd mini-postman/client
@@ -22,26 +29,24 @@ jobs:
       env:
         VITE_API_BASE_URL: /api/mini-postman
 
-    # Шаг 2. Подготовка сервера
+    # 3. Подготовка сервера
     - name: Prepare Server
       run: |
         cd mini-postman/server
-        npm ci --production
-        # Копируем .env если есть
-        [ -f .env.production ] && cp .env.production .env || echo "No .env.production"
+        npm ci --omit=dev
+        cp .env.production .env || echo ".env.production not found"
 
-    # Шаг 3. Создание артефактов
-    - name: Create Artifacts
+    # 4. Создание структуры для деплоя
+    - name: Create Deployment Structure
       run: |
         mkdir -p deployment
-        # Клиент (сборка)
-        cp -r mini-postman/client/dist deployment/client
-        # Сервер (без node_modules)
-        cp -r mini-postman/server deployment/
-        rm -rf deployment/server/node_modules
+        mkdir -p deployment/mini-postman
+        cp -r mini-postman/client/dist deployment/mini-postman/client
+        cp -r mini-postman/server deployment/mini-postman/
+        rm -rf deployment/mini-postman/server/node_modules
 
-    # Шаг 4. Деплой
-    - name: Deploy
+    # 5. Деплой файлов
+    - name: Deploy Files
       uses: appleboy/scp-action@v0.1.5
       with:
         host: 178.250.247.67
@@ -49,11 +54,11 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         source: "deployment/"
-        target: "/root/mini-postman/"
+        target: "/root/"
         rm: true
         overwrite: true
 
-    # Шаг 5. Настройка сервера
+    # 6. Настройка сервера
     - name: Setup Server
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -62,26 +67,50 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          # Установка зависимостей
+          # 1. Создаем структуру папок
+          mkdir -p /root/mini-postman
+          
+          # 2. Установка PM2 глобально (если нужно)
+          if ! command -v pm2 &> /dev/null; then
+            npm install -g pm2
+          fi
+          
+          # 3. Установка Nginx (если нужно)
+          if ! command -v nginx &> /dev/null; then
+            sudo apt update
+            sudo apt install -y nginx
+          fi
+          
+          # 4. Установка зависимостей
           cd /root/mini-postman/server
-          npm install --production
-
-          # PM2
+          npm install --omit=dev
+          
+          # 5. Запуск через PM2
           pm2 delete mini-postman || true
-          pm2 start app.js --name "mini-postman" --update-env
+          pm2 start /root/mini-postman/server/app.js --name "mini-postman"
           pm2 save
-
-          # Nginx
+          pm2 startup
+          
+          # 6. Настройка Nginx
+          sudo bash -c 'mkdir -p /etc/nginx/conf.d'
           sudo bash -c 'cat > /etc/nginx/conf.d/mini-postman.conf <<EOF
-          location /mini-postman {
-              alias /root/mini-postman/client;
-              try_files \$uri /index.html;
-          }
-
-          location /api/mini-postman {
-              proxy_pass http://localhost:3334;
-              proxy_set_header Host \$host;
+          server {
+              listen 80;
+              server_name 178.250.247.67;
+              
+              location /mini-postman {
+                  alias /root/mini-postman/client;
+                  try_files \$uri /index.html;
+                  index index.html;
+              }
+              
+              location /api/mini-postman {
+                  proxy_pass http://localhost:3334;
+                  proxy_set_header Host \$host;
+                  proxy_set_header X-Real-IP \$remote_addr;
+              }
           }
           EOF'
-
+          
+          # 7. Проверка и перезапуск Nginx
           sudo nginx -t && sudo systemctl restart nginx
