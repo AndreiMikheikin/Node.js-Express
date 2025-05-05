@@ -21,7 +21,7 @@ jobs:
         node-version: 18
         cache: 'npm'
 
-    # 2. Сборка клиентской части
+    # 2. Сборка клиента
     - name: Build Client
       run: |
         cd mini-postman/client
@@ -30,32 +30,27 @@ jobs:
       env:
         VITE_API_BASE_URL: /api/mini-postman
 
-    # 3. Установка зависимостей для сервера
+    # 3. Подготовка сервера
     - name: Prepare Server
       run: |
         cd mini-postman/server
         npm ci --omit=dev
+        cp .env.production .env || echo ".env.production not found"
 
-    # 4. Деплой файлов на сервер
+    # 4. Деплой файлов
     - name: Deploy Files
       uses: appleboy/scp-action@v0.1.5
       with:
-        host: 178.250.247.67  # IP сервера
+        host: 178.250.247.67
         username: root
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
-        source: "mini-postman/client/dist/*"  # Клиентская сборка
-        target: "/root/mini-postman/dist"    # Папка для клиентской сборки на сервере
-
-    - name: Deploy Server Files
-      uses: appleboy/scp-action@v0.1.5
-      with:
-        host: 178.250.247.67  # IP сервера
-        username: root
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        source: "mini-postman/server/*"     # Серверные файлы
-        target: "/root/mini-postman/server"  # Папка для серверных файлов на сервере
+        source: |
+          mini-postman/client/dist
+          mini-postman/server
+        target: /root/mini-postman/
+        rm: true
+        overwrite: true
 
     # 5. Настройка сервера
     - name: Setup Server Environment
@@ -66,49 +61,48 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 22
         script: |
-          # 1. Проверяем и создаем структуру папок
-          echo "Creating directory structure..."
-          mkdir -p /root/mini-postman/dist
-          mkdir -p /root/mini-postman/server
-          
-          # 2. Проверяем установку Node.js и npm
+          echo "Creating necessary directories..."
+          mkdir -p /root/mini-postman
+
           if ! command -v node &> /dev/null; then
             echo "Installing Node.js..."
             curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
             sudo apt-get install -y nodejs
           fi
-          
-          # 3. Проверяем установку PM2
+
           if ! command -v pm2 &> /dev/null; then
             echo "Installing PM2..."
             sudo npm install -g pm2
           fi
-          
-          # 4. Устанавливаем зависимости
-          echo "Installing dependencies..."
+
+          if ! command -v nginx &> /dev/null; then
+            echo "Installing Nginx..."
+            sudo apt update
+            sudo apt install -y nginx
+          fi
+
+          echo "Installing server dependencies..."
           cd /root/mini-postman/server
           npm install --omit=dev
-          
-          # 5. Настроим PM2
+
           echo "Setting up PM2..."
           pm2 delete mini-postman || true
           pm2 start /root/mini-postman/server/app.js --name "mini-postman"
           pm2 save
           pm2 startup
-          
-          # 6. Настроим Nginx
+
           echo "Configuring Nginx..."
           sudo bash -c 'cat > /etc/nginx/conf.d/mini-postman.conf <<EOF
           server {
               listen 80;
               server_name 178.250.247.67;
-              
+
               location /mini-postman {
                   alias /root/mini-postman/dist;
                   try_files \$uri /index.html;
                   index index.html;
               }
-              
+
               location /api/mini-postman {
                   proxy_pass http://localhost:3334;
                   proxy_set_header Host \$host;
@@ -116,9 +110,8 @@ jobs:
               }
           }
           EOF'
-          
-          # 7. Проверяем и перезапускаем Nginx
+
           sudo nginx -t
           sudo systemctl restart nginx
-          
-          echo "Deployment completed successfully!"
+
+          echo "Deployment completed!"
