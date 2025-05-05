@@ -1,6 +1,32 @@
 [
   {
-    "url": "https://www.mts.by",
+    "url": "https://www.ibm.com/products/api-connect",
+    "method": "GET",
+    "headers": [
+      {
+        "key": "lnk",
+        "value": "flatitem"
+      },
+      {
+        "key": "test",
+        "value": "1234"
+      }
+    ],
+    "id": 1746433931170
+  },
+  {
+    "url": "https://fe.it-academy.by/images/logo3.png",
+    "method": "GET",
+    "headers": [
+      {
+        "key": "Content-Type",
+        "value": "image/*"
+      }
+    ],
+    "id": 1746434007599
+  },
+  {
+    "url": "http://nodearch.e-learning.by:4052/main1.html",
     "method": "GET",
     "headers": [
       {
@@ -8,6 +34,17 @@
         "value": "text/html"
       }
     ],
-    "id": 1746430819634
+    "id": 1746434080018
+  },
+  {
+    "url": "http://fe.it-academy.by/aaa.gif",
+    "method": "GET",
+    "headers": [
+      {
+        "key": "Content-Type",
+        "value": "image/*"
+      }
+    ],
+    "id": 1746434141903
   }
 ]
