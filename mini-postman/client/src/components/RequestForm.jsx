@@ -13,7 +13,22 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
     if (selectedConfig) {
       setUrl(selectedConfig.url || '');
       setMethod(selectedConfig.method || 'GET');
-      setHeaders(selectedConfig.headers || [{ key: '', value: '' }]);
+      
+      // Преобразуем headers в массив, если это объект
+      let headersArray = [{ key: '', value: '' }];
+      if (selectedConfig.headers) {
+        if (Array.isArray(selectedConfig.headers)) {
+          headersArray = selectedConfig.headers;
+        } else if (typeof selectedConfig.headers === 'object') {
+          // Конвертируем объект в массив { key, value }
+          headersArray = Object.entries(selectedConfig.headers).map(([key, value]) => ({
+            key,
+            value: String(value),
+          }));
+        }
+      }
+      
+      setHeaders(headersArray);
       setBody(selectedConfig.body || '');
     }
   }, [selectedConfig]);
@@ -251,7 +266,6 @@ const RequestForm = ({ onSendRequest, selectedConfig }) => {
       </div>
     </form>
   );
-
 };
 
 RequestForm.propTypes = {

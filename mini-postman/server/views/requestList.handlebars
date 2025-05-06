@@ -1,0 +1,32 @@
+<div class="aam_config-list__section">
+  <h3 class="aam_config-list__sub-title">Серверный SSR-шаблон конфигураций</h3>
+  {{#if requests.length}}
+    <ul class="aam_config-list__items">
+      {{#each requests}}
+        <li class="aam_config-list__item" data-id="{{id}}">
+          <div class="aam_config-list__method-url">
+            <strong>{{method}}</strong> {{url}}
+          </div>
+          <div class="aam_config-list__headers">
+            <strong>Заголовки:</strong>
+            <code class="aam_config-list__code">{{json headers}}</code>
+          </div>
+          <div class="aam_config-list__body">
+            <strong>Тело:</strong>
+            <code class="aam_config-list__code">{{json body}}</code>
+          </div>
+          <div class="aam_config-list__buttons">
+            <button class="aam_config-list__button aam_config-list__button--select" data-config='{{{json this}}}'>
+              Выбрать
+            </button>
+            <button class="aam_config-list__button aam_config-list__button--delete" data-id="{{id}}">
+              Удалить
+            </button>
+          </div>
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p class="aam_config-list__empty">Нет сохранённых конфигураций.</p>
+  {{/if}}
+</div>

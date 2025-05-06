@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/ConfigList.scss';
+import ServerRenderedTemplates from './ServerRenderedTemplates';
 
 const ConfigList = ({ onSelect }) => {
   const [serverConfigs, setServerConfigs] = useState([]);
   const [localConfigs, setLocalConfigs] = useState([]);
-  const [loading, setLoading] = useState(true);  // Чтобы отображать индикатор загрузки
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Сначала читаем данные с сервера
     const fetchConfigsFromServer = async () => {
       try {
         const response = await fetch('/api/miniPostman/savedRequests');
@@ -15,22 +15,20 @@ const ConfigList = ({ onSelect }) => {
           throw new Error('Не удалось загрузить данные с сервера');
         }
         const serverConfigsData = await response.json();
-        setServerConfigs(serverConfigsData); // Устанавливаем данные с сервера
+        setServerConfigs(serverConfigsData);
       } catch (error) {
         console.error('Ошибка при загрузке данных с сервера:', error);
       } finally {
-        setLoading(false);  // Заканчиваем загрузку
+        setLoading(false);
       }
     };
 
-    // Загружаем конфигурации из localStorage
     const storedConfigs = JSON.parse(localStorage.getItem('savedRequests')) || [];
-    setLocalConfigs(storedConfigs);  // Устанавливаем данные из localStorage
+    setLocalConfigs(storedConfigs);
 
-    fetchConfigsFromServer(); // Загружаем данные с сервера
+    fetchConfigsFromServer();
   }, []);
 
-  // Удаление конфигурации с сервера
   const handleDeleteFromServer = async (index, configId) => {
     try {
       const response = await fetch(`/api/miniPostman/deleteRequest/${configId}`, {
@@ -41,7 +39,6 @@ const ConfigList = ({ onSelect }) => {
         throw new Error('Не удалось удалить конфигурацию с сервера');
       }
 
-      // Обновляем состояние после удаления с сервера
       const updatedConfigs = serverConfigs.filter((_, i) => i !== index);
       setServerConfigs(updatedConfigs);
     } catch (error) {
@@ -53,21 +50,18 @@ const ConfigList = ({ onSelect }) => {
     if (source === 'local') {
       const updatedConfigs = localConfigs.filter((_, i) => i !== index);
       setLocalConfigs(updatedConfigs);
-      localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs)); 
+      localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs));
     } else if (source === 'server') {
       handleDeleteFromServer(index, configId);
-    }
-  };
-
-  const handleSelect = (config) => {
-    if (onSelect) {
-      onSelect(config);
     }
   };
 
   return (
     <div className="aam_config-list">
       <h2 className="aam_config-list__title">Сохранённые конфигурации</h2>
+
+      {/* Шаблонный рендеринг на сервере */}
+      <ServerRenderedTemplates onSelect={onSelect} onDelete={handleDelete} />
 
       {/* Конфигурации с сервера */}
       <div className="aam_config-list__section">
@@ -93,7 +87,7 @@ const ConfigList = ({ onSelect }) => {
                 </div>
                 <div className="aam_config-list__buttons">
                   <button
-                    onClick={() => handleSelect(config)}
+                    onClick={() => onSelect(config)}
                     className="aam_config-list__button aam_config-list__button--select"
                   >
                     Выбрать
@@ -133,7 +127,7 @@ const ConfigList = ({ onSelect }) => {
                 </div>
                 <div className="aam_config-list__buttons">
                   <button
-                    onClick={() => handleSelect(config)}
+                    onClick={() => onSelect(config)}
                     className="aam_config-list__button aam_config-list__button--select"
                   >
                     Выбрать
@@ -150,7 +144,6 @@ const ConfigList = ({ onSelect }) => {
           </ul>
         )}
       </div>
-
     </div>
   );
 };
