@@ -1,50 +1,48 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 const ServerRenderedTemplates = ({ onSelect, onDelete }) => {
-  const containerRef = useRef(null);
+  const [html, setHtml] = useState('');
 
   useEffect(() => {
-    const handleClick = (event) => {
-      const deleteButton = event.target.closest('.aam_config-list__button--delete');
-      const selectButton = event.target.closest('.aam_config-list__button--select');
-
-      if (deleteButton && onDelete) {
-        const configId = deleteButton.dataset.id;
-        if (configId) onDelete(configId);
-      }
-
-      if (selectButton && onSelect) {
-        const config = selectButton.dataset.config;
-        try {
-          if (config) onSelect(JSON.parse(config));
-        } catch (e) {
-          console.error('Ошибка парсинга конфигурации:', e);
-        }
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('click', handleClick);
-    }
+    let isMounted = true;
 
     fetch('/api/miniPostman/templates')
       .then(res => res.text())
-      .then(html => {
-        if (container) {
-          container.innerHTML = html;
-        }
+      .then(htmlText => {
+        if (isMounted) setHtml(htmlText);
       })
       .catch(err => console.error('Ошибка при загрузке шаблонов:', err));
 
     return () => {
-      if (container) {
-        container.removeEventListener('click', handleClick);
-      }
+      isMounted = false;
     };
-  }, [onSelect, onDelete]);
+  }, []);
 
-  return <div ref={containerRef} />;
+  const handleClick = useCallback((event) => {
+    const deleteButton = event.target.closest('.aam_config-list__button--delete');
+    const selectButton = event.target.closest('.aam_config-list__button--select');
+
+    if (deleteButton && onDelete) {
+      const configId = deleteButton.dataset.id;
+      if (configId) onDelete(configId);
+    }
+
+    if (selectButton && onSelect) {
+      const config = selectButton.dataset.config;
+      try {
+        if (config) onSelect(JSON.parse(config));
+      } catch (e) {
+        console.error('Ошибка парсинга конфигурации:', e);
+      }
+    }
+  }, [onDelete, onSelect]);
+
+  return (
+    <div
+      onClick={handleClick}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
 };
 
-export default ServerRenderedTemplates;
+export default React.memo(ServerRenderedTemplates);

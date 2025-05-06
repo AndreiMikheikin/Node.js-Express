@@ -1,78 +1,90 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import '../styles/ConfigList.scss';
 import ServerRenderedTemplates from './ServerRenderedTemplates';
 
 const ConfigList = ({ onSelect }) => {
-  const [serverConfigs, setServerConfigs] = useState([]);
-  const [localConfigs, setLocalConfigs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [configs, setConfigs] = useState({
+    server: [],
+    local: [],
+    loading: true,
+  });
 
   useEffect(() => {
-    const fetchConfigsFromServer = async () => {
+    const fetchConfigs = async () => {
       try {
-        const response = await fetch('/api/miniPostman/savedRequests');
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить данные с сервера');
-        }
-        const serverConfigsData = await response.json();
-        setServerConfigs(serverConfigsData);
+        const [serverResponse, localData] = await Promise.all([
+          fetch('/api/miniPostman/savedRequests')
+            .then(res => {
+              if (!res.ok) throw new Error('Ошибка запроса к серверу');
+              return res.json();
+            }),
+          Promise.resolve(
+            JSON.parse(localStorage.getItem('savedRequests') || '[]')
+          )
+        ]);
+
+        setConfigs({
+          server: serverResponse,
+          local: localData,
+          loading: false,
+        });
       } catch (error) {
-        console.error('Ошибка при загрузке данных с сервера:', error);
-      } finally {
-        setLoading(false);
+        console.error('Ошибка при загрузке конфигураций:', error);
+        setConfigs(prev => ({ ...prev, loading: false }));
       }
     };
 
-    const storedConfigs = JSON.parse(localStorage.getItem('savedRequests')) || [];
-    setLocalConfigs(storedConfigs);
-
-    fetchConfigsFromServer();
+    fetchConfigs();
   }, []);
 
-  const handleDeleteFromServer = async (index, configId) => {
+  const handleDeleteFromServer = useCallback(async (index, configId) => {
     try {
       const response = await fetch(`/api/miniPostman/deleteRequest/${configId}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        throw new Error('Не удалось удалить конфигурацию с сервера');
-      }
+      if (!response.ok) throw new Error('Не удалось удалить с сервера');
 
-      const updatedConfigs = serverConfigs.filter((_, i) => i !== index);
-      setServerConfigs(updatedConfigs);
+      setConfigs(prev => ({
+        ...prev,
+        server: prev.server.filter((_, i) => i !== index),
+      }));
     } catch (error) {
-      console.error('Ошибка при удалении конфигурации с сервера:', error);
+      console.error('Ошибка при удалении:', error);
     }
-  };
+  }, []);
 
-  const handleDelete = (index, source, configId) => {
+  const handleDelete = useCallback((index, source, configId) => {
     if (source === 'local') {
-      const updatedConfigs = localConfigs.filter((_, i) => i !== index);
-      setLocalConfigs(updatedConfigs);
-      localStorage.setItem('savedRequests', JSON.stringify(updatedConfigs));
+      const updated = configs.local.filter((_, i) => i !== index);
+      localStorage.setItem('savedRequests', JSON.stringify(updated));
+      setConfigs(prev => ({ ...prev, local: updated }));
     } else if (source === 'server') {
       handleDeleteFromServer(index, configId);
     }
-  };
+  }, [configs.local, handleDeleteFromServer]);
+
+  const handleSelect = useCallback((config) => {
+    onSelect(config);
+  }, [onSelect]);
 
   return (
     <div className="aam_config-list">
       <h2 className="aam_config-list__title">Сохранённые конфигурации</h2>
 
-      {/* Шаблонный рендеринг на сервере */}
-      <ServerRenderedTemplates onSelect={onSelect} onDelete={handleDelete} />
+      {/* Серверный рендеринг */}
+      <ServerRenderedTemplates onSelect={handleSelect} onDelete={handleDelete} />
 
-      {/* Конфигурации с сервера */}
+      {/* Серверные конфиги */}
       <div className="aam_config-list__section">
         <h3 className="aam_config-list__sub-title">Сохранённые конфигурации на сервере</h3>
-        {loading ? (
+        {configs.loading ? (
           <p className="aam_config-list__loading">Загрузка...</p>
-        ) : serverConfigs.length === 0 ? (
-          <p className="aam_config-list__empty">Нет сохранённых конфигураций на сервере.</p>
+        ) : configs.server.length === 0 ? (
+          <p className="aam_config-list__empty">Нет конфигураций на сервере.</p>
         ) : (
           <ul className="aam_config-list__items">
-            {serverConfigs.map((config, index) => (
+            {configs.server.map((config, index) => (
               <li key={index} className="aam_config-list__item">
                 <div className="aam_config-list__method-url">
                   <strong>{config.method}</strong> {config.url}
@@ -105,14 +117,14 @@ const ConfigList = ({ onSelect }) => {
         )}
       </div>
 
-      {/* Конфигурации из localStorage */}
+      {/* Локальные конфиги */}
       <div className="aam_config-list__section">
         <h3 className="aam_config-list__sub-title">Сохранённые конфигурации в localStorage</h3>
-        {localConfigs.length === 0 ? (
-          <p className="aam_config-list__empty">Нет сохранённых конфигураций в localStorage.</p>
+        {configs.local.length === 0 ? (
+          <p className="aam_config-list__empty">Нет конфигураций в localStorage.</p>
         ) : (
           <ul className="aam_config-list__items">
-            {localConfigs.map((config, index) => (
+            {configs.local.map((config, index) => (
               <li key={index} className="aam_config-list__item">
                 <div className="aam_config-list__method-url">
                   <strong>{config.method}</strong> {config.url}
