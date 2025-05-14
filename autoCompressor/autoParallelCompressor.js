@@ -89,10 +89,10 @@ async function runParallelCompression(tasks, maxFiles) {
     const executing = new Set();
     const slotStats = Array.from({ length: maxFiles }, () => 0);
 
-    let currentslotIndex = 0;
+    let currentSlotIndex = 0;
 
     for (const task of tasks) {
-        const slotIndex = currentslotIndex;
+        const slotIndex = currentSlotIndex;
 
         const promise = compressFile(task, slotIndex).then(result => {
             executing.delete(promise);
@@ -105,7 +105,7 @@ async function runParallelCompression(tasks, maxFiles) {
         executing.add(promise);
         results.push(promise);
 
-        currentslotIndex = (currentslotIndex + 1) % maxFiles;
+        currentSlotIndex = (currentSlotIndex + 1) % maxFiles;
 
         if (executing.size >= maxFiles) {
             await Promise.race(executing);
@@ -120,7 +120,7 @@ async function runParallelCompression(tasks, maxFiles) {
 
 async function runAutoCompressor(inputPathRaw, maxFilesRaw) {
     const inputPath = inputPathRaw || '.';
-    const maxFiles = Math.max(1, parseInt(maxFilesRaw) || 1);
+    const maxFiles = Math.max(1, parseInt(maxFilesRaw) || 2);
     const absolutePath = path.isAbsolute(inputPath)
         ? inputPath
         : path.resolve(process.cwd(), inputPath);
