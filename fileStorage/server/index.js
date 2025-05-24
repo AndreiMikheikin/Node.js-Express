@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3335;
+const PORT = 80;
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 const META_PATH = path.join(UPLOAD_DIR, 'meta.json');
 const httpServer = http.createServer(app); // Создаём HTTP-сервер на основе Express
