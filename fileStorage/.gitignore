@@ -1,0 +1,7 @@
+node_modules/
+uploads/
+client/styles/styles.css
+client/scripts/old*
+client/old*
+server/old*
+.env

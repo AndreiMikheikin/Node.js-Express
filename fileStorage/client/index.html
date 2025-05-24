@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FileStorage - Хранилище файлов</title>
+  <link rel="stylesheet" href="./styles/styles.css" />
+</head>
+<body>
+  <div class="aam_container">
+    <h1 class="aam_title">FileStorage</h1>
+
+    <section class="aam_upload-section">
+      <h2 class="aam_section-title">Загрузить файл</h2>
+      <form id="uploadForm" class="aam_form" novalidate>
+        <div class="aam_form-group">
+          <label for="fileInput">Файл:</label>
+          <input type="file" id="fileInput" name="file" required />
+        </div>
+        <div class="aam_form-group">
+          <label for="comment">Комментарий:</label>
+          <textarea id="comment" name="comment" rows="2" placeholder="Необязательно"></textarea>
+        </div>
+        <div class="aam_form-group aam_button-group">
+          <button type="button" id="uploadBtn" class="aam_btn aam_btn-primary">Загрузить</button>
+          <button type="button" id="cancelBtn" class="aam_btn aam_btn-secondary" style="display: none;">Отменить</button>
+        </div>
+      </form>
+
+      <div id="progressContainer" class="aam_progress-container" style="display: none;">
+        <p>Прогресс:</p>
+        <progress id="progressBar" value="0" max="100"></progress>
+        <span id="statusText">Ожидание загрузки...</span>
+      </div>
+
+      <div id="errorMessage" class="aam_message aam_error" style="display: none;"></div>
+      <div id="successMessage" class="aam_message aam_success" style="display: none;"></div>
+    </section>
+
+    <section class="aam_files-section">
+      <h2 class="aam_section-title">Загруженные файлы</h2>
+      <div id="filesList" class="aam_files-list"></div>
+    </section>
+  </div>
+
+  <script src="./scripts/script.js" type="module"></script>
+</body>
+</html>

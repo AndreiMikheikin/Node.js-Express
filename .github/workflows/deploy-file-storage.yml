@@ -1,0 +1,73 @@
+name: Deploy FileStorage
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'fileStorage/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        cache: 'npm'
+
+    - name: Build SCSS
+      run: |
+        npm install -g sass
+        sass fileStorage/client/styles/styles.scss fileStorage/client/styles/styles.css --no-source-map
+
+    - name: Prepare deployment artifacts
+      run: |
+        rm -rf deployment
+        mkdir deployment
+        cp -r fileStorage/client deployment/client
+        cp -r fileStorage/server deployment/server
+        cp fileStorage/package.json deployment/
+        cp fileStorage/package-lock.json deployment/
+        rm -rf deployment/server/node_modules
+
+    - name: Validate SSH Key
+      run: |
+        echo "$SSH_PRIVATE_KEY" > key.pem
+        chmod 600 key.pem
+        ssh-keygen -lf key.pem
+        rm key.pem
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Deploy via SCP
+      uses: appleboy/scp-action@v0.1.5
+      with:
+        host: 178.250.247.67
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "deployment/"
+        target: "/root/file-storage"
+        rm: true
+        overwrite: true
+        strip_components: 1
+        timeout: 2m
+
+    - name: Install dependencies and restart server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: 178.250.247.67
+        username: root
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /root/file-storage
+          npm install --production
+          pm2 delete file-storage || true
+          pm2 start server/index.js --name "file-storage"
+          pm2 save
+          pm2 list

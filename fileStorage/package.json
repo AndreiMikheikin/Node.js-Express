@@ -1,0 +1,26 @@
+{
+  "name": "filestorage",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "build:scss": "sass client/styles/styles.scss client/styles/styles.css --no-source-map",
+    "dev": "nodemon server/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "iconv-lite": "^0.6.3",
+    "multer": "^2.0.0",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "sass": "^1.89.0"
+  },
+  "description": ""
+}
