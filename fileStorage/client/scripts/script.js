@@ -62,8 +62,8 @@ function startUpload(file) {
     showProgressUI();
     uploadBtn.disabled = true;
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    ws = new WebSocket(`${wsProtocol}//178.250.247.67:3335`);
+    const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(`${wsProtocol}://178.250.247.67:3335`);
 
     const wsTimeout = setTimeout(() => {
         if (ws && ws.readyState !== WebSocket.OPEN) {
@@ -118,18 +118,18 @@ function uploadFile(file) {
         },
         body: file
     })
-    .then(res => {
-        if (!res.ok) throw new Error('Ошибка загрузки');
-        // Сервер отправит done при успешном завершении
-    })
-    .catch(err => {
-        if (err.name === 'AbortError') {
-            // Обработка уже происходит в cancelUpload
-        } else {
-            console.error('[Client] Ошибка загрузки:', err);
-            showError('Ошибка при загрузке файла');
-        }
-    });
+        .then(res => {
+            if (!res.ok) throw new Error('Ошибка загрузки');
+            // Сервер отправит done при успешном завершении
+        })
+        .catch(err => {
+            if (err.name === 'AbortError') {
+                // Обработка уже происходит в cancelUpload
+            } else {
+                console.error('[Client] Ошибка загрузки:', err);
+                showError('Ошибка при загрузке файла');
+            }
+        });
 }
 
 function cancelUpload() {
@@ -159,7 +159,7 @@ function completeUpload() {
     controller = null;
     uploadId = null;
     if (ws) {
-        try { ws.close(); } catch {}
+        try { ws.close(); } catch { }
         ws = null;
     }
     fileInput.value = '';
@@ -178,7 +178,7 @@ function markAsAborted(id) {
 
 function resetUpload(keepWS = false) {
     if (!keepWS && ws) {
-        try { ws.close(); } catch {}
+        try { ws.close(); } catch { }
         ws = null;
     }
     controller = null;
