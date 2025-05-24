@@ -14,9 +14,9 @@ const PORT = process.env.PORT || 3335;
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 const META_PATH = path.join(UPLOAD_DIR, 'meta.json');
 const httpServer = http.createServer(app); // Создаём HTTP-сервер на основе Express
-const ws = new WebSocketServer({ server: httpServer }); // Привязываем WS к этому же серверу
+const wss = new WebSocketServer({ server: httpServer }); // Привязываем WS к этому же серверу
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
@@ -223,7 +223,7 @@ app.get('/files', async (req, res) => {
 
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
-ws.on('connection', ws => {
+wss.on('connection', ws => {
   console.log('[WS] Новое соединение');
 
   ws.on('message', async msg => {
