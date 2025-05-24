@@ -16,7 +16,7 @@ const META_PATH = path.join(UPLOAD_DIR, 'meta.json');
 const httpServer = http.createServer(app); // Создаём HTTP-сервер на основе Express
 const wss = new WebSocketServer({ server: httpServer }); // Привязываем WS к этому же серверу
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
