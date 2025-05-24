@@ -9,6 +9,22 @@ const filesList = document.getElementById('filesList');
 const errorMessage = document.getElementById('errorMessage');
 const successMessage = document.getElementById('successMessage');
 
+if (!crypto.randomUUID) {
+    crypto.randomUUID = function () {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+
+        // Преобразование в UUIDv4 строку
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+        const toHex = (b) => b.toString(16).padStart(2, '0');
+        const hex = Array.from(bytes, toHex).join('');
+
+        return `${hex.substr(0, 8)}-${hex.substr(8, 4)}-${hex.substr(12, 4)}-${hex.substr(16, 4)}-${hex.substr(20)}`;
+    };
+}
+
 let ws = null;
 let uploadId = null;
 let controller = null;
