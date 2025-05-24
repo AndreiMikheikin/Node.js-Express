@@ -63,7 +63,7 @@ function startUpload(file) {
     uploadBtn.disabled = true;
 
     const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
-    const ws = new WebSocket(`${wsProtocol}://178.250.247.67:3335`);
+    ws = new WebSocket(`${wsProtocol}://178.250.247.67:3335`);
 
     const wsTimeout = setTimeout(() => {
         if (ws && ws.readyState !== WebSocket.OPEN) {
