@@ -28,7 +28,7 @@ const connectToMySQL = async () => {
   mysqlPool = await mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '', // пароль, если есть
+    password: '',
     database: 'learning_db',
     waitForConnections: true,
     connectionLimit: 10,
