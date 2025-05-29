@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>SQLExplorer</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 100px; }
+    select, button { padding: 5px; margin-right: 10px; }
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 5px; }
+    th { background: #eee; }
+    .error { color: red; }
+    .result { margin-top: 20px; }
+    .loading { color: #666; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>SQLExplorer</h1>
+
+  <label>Тип БД:</label>
+  <select id="engineSelect">
+    <option value="sqlite">SQLite</option>
+    <option value="mysql">MySQL</option>
+  </select>
+
+  <label>База данных:</label>
+  <select id="dbSelect">
+    <option value="main.sqlite">main.sqlite</option>
+  </select>
+
+  <br><br>
+
+  <textarea id="sqlInput" placeholder="Введите SQL-запрос"></textarea><br>
+  <button onclick="runQuery()">Выполнить</button>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    const engineSelect = document.getElementById('engineSelect');
+    const dbSelect = document.getElementById('dbSelect');
+    const resultDiv = document.getElementById('result');
+    let databasesCache = { sqlite: [], mysql: [] };
+
+    // Загрузка списка баз данных при загрузке страницы
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadDatabases();
+      updateDbSelect();
+    });
+
+    // Обработчик изменения типа БД
+    engineSelect.addEventListener('change', updateDbSelect);
+
+    // Загрузка списка баз данных с сервера
+    async function loadDatabases() {
+      try {
+        resultDiv.innerHTML = '<p class="loading">Загрузка списка баз данных...</p>';
+        
+        const response = await fetch('/api/databases');
+        const data = await response.json();
+        
+        if (data.success) {
+          databasesCache = {
+            sqlite: data.sqlite,
+            mysql: data.mysql
+          };
+          resultDiv.innerHTML = '';
+        } else {
+          console.error('Ошибка загрузки списка баз:', data.error);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке списка баз:', error);
+        resultDiv.innerHTML = `<p class="error">Ошибка загрузки списка баз: ${error.message}</p>`;
+      }
+    }
+
+    // Обновление select с базами данных в зависимости от выбранного типа
+    function updateDbSelect() {
+      const engine = engineSelect.value;
+      dbSelect.innerHTML = '';
+      
+      const databases = databasesCache[engine];
+      
+      if (databases.length === 0) {
+        const defaultDb = engine === 'sqlite' ? 'main.sqlite' : 'learning_db';
+        dbSelect.innerHTML = `<option value="${defaultDb}">${defaultDb}</option>`;
+        return;
+      }
+      
+      databases.forEach(db => {
+        const option = document.createElement('option');
+        option.value = db.name;
+        option.textContent = db.name;
+        dbSelect.appendChild(option);
+      });
+    }
+
+    // Выполнение SQL-запроса
+    async function runQuery() {
+      const sql = document.getElementById('sqlInput').value.trim();
+      const engine = engineSelect.value;
+      const database = dbSelect.value;
+
+      if (!sql) {
+        resultDiv.innerHTML = '<p class="error">Введите SQL-запрос</p>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<p class="loading">Выполнение запроса...</p>';
+
+      try {
+        const res = await fetch('/api/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sql, engine, database })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          resultDiv.innerHTML = `<p class="error">Ошибка: ${data.error}</p>`;
+        } else if (data.rows) {
+          renderResults(data.rows);
+        } else if (typeof data.affectedRows === 'number') {
+          resultDiv.innerHTML = `<p>Изменено строк: ${data.affectedRows}</p>`;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">Ошибка выполнения запроса: ${error.message}</p>`;
+      }
+    }
+
+    // Отрисовка результатов в виде таблицы
+    function renderResults(rows) {
+      if (rows.length === 0) {
+        resultDiv.innerHTML = '<p>Нет данных</p>';
+        return;
+      }
+
+      const headers = Object.keys(rows[0]);
+      let html = '<table><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+      
+      rows.forEach(row => {
+        html += '<tr>' + headers.map(h => {
+          let value = row[h];
+          if (value === null) value = 'NULL';
+          if (value === undefined) value = '';
+          return `<td>${value}</td>`;
+        }).join('') + '</tr>';
+      });
+      
+      html += '</table>';
+      resultDiv.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
