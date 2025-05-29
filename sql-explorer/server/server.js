@@ -21,7 +21,7 @@ const connectToSQLite = async () => {
   });
   console.log('SQLite подключена');
 };
- 
+
 // MySQL DB
 let mysqlPool;
 const connectToMySQL = async () => {
